@@ -1,0 +1,34 @@
+// Test program for SiSyL code generation
+// This tests basic functionality: functions, variables, control flow
+
+Int64 add(Int64 a, Int64 b) {
+    return a + b;
+}
+
+Int64 factorial(Int64 n) {
+    if (n <= 1) {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+Int64 main() {
+    Int64 x = 5;
+    Int64 y = 10;
+    Int64 sum = add(x, y);
+    
+    Int64 fact = factorial(5);
+    
+    if (sum > 10) {
+        sum = sum - 5;
+    } else {
+        sum = sum + 5;
+    }
+    
+    Int64 i = 0;
+    while (i < 3) {
+        i = i + 1;
+    }
+    
+    return sum;
+}
