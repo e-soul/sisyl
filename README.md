@@ -1,5 +1,7 @@
 # SiSyL: A Simple Systems Language
 
+[![CI](https://github.com/sisyl/sisyl/actions/workflows/ci.yml/badge.svg)](https://github.com/sisyl/sisyl/actions/workflows/ci.yml)
+
 SiSyL (Simple Systems Language) is a minimal safe systems programming
 language designed to demonstrate that memory safety can be achieved
 without a garbage collector, reference counting or a borrow checker. It
