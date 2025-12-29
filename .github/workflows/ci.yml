@@ -27,7 +27,7 @@ jobs:
         run: echo "LLVM_DIR=$(llvm-config --cmakedir)" >> "$GITHUB_ENV"
 
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_CLANG_TIDY=clang-tidy
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DSISYL_CLANG_TIDY=clang-tidy
 
       - name: Build
         run: cmake --build build --config Release --parallel

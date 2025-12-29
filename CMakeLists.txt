@@ -20,6 +20,9 @@
 cmake_minimum_required(VERSION 3.20)
 project(sisyl CXX)
 
+# Optional clang-tidy integration (set via -DSISYL_CLANG_TIDY=clang-tidy)
+set(SISYL_CLANG_TIDY "" CACHE STRING "Path to clang-tidy executable")
+
 # Use C++23 for the project (ANTLR4 runtime requires at least std::any)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -189,24 +192,35 @@ target_include_directories(sisyl_lib PUBLIC include ${ANTLR4_INCLUDE_DIRS})
 target_link_libraries(sisyl_lib antlr4_static)
 target_link_libraries(sisyl_lib ${LLVM_LIBS})
 
+function(enable_sisyl_clang_tidy target_name)
+    if (SISYL_CLANG_TIDY)
+        set_target_properties(${target_name} PROPERTIES CXX_CLANG_TIDY "${SISYL_CLANG_TIDY}")
+    endif()
+endfunction()
+
+enable_sisyl_clang_tidy(sisyl_lib)
+
 # Test executable - semantic tests
 add_executable(sisyl_tests tests/semantic_tests.cpp)
 target_include_directories(sisyl_tests PRIVATE include)
 target_link_libraries(sisyl_tests sisyl_lib gtest_main)
 include(GoogleTest)
 gtest_discover_tests(sisyl_tests)
+enable_sisyl_clang_tidy(sisyl_tests)
 
 # Test executable - parser tests
 add_executable(parser_tests tests/parser_tests.cpp)
 target_include_directories(parser_tests PRIVATE include ${ANTLR4_INCLUDE_DIRS})
 target_link_libraries(parser_tests sisyl_lib gtest_main)
 gtest_discover_tests(parser_tests)
+enable_sisyl_clang_tidy(parser_tests)
 
 # Test executable - code generator tests
 add_executable(codegen_tests tests/codegen_tests.cpp)
 target_include_directories(codegen_tests PRIVATE include)
 target_link_libraries(codegen_tests sisyl_lib gtest_main)
 gtest_discover_tests(codegen_tests)
+enable_sisyl_clang_tidy(codegen_tests)
 
 # -----------------------------------------------------------------------------
 # Compiler sources
@@ -227,3 +241,4 @@ target_link_libraries(sisylc antlr4_static)
 
 # Link against LLVM components (required).
 target_link_libraries(sisylc ${LLVM_LIBS})
+enable_sisyl_clang_tidy(sisylc)
