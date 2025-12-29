@@ -119,6 +119,7 @@ set(ANTLR4_GEN_FILES
     ${ANTLR4_GENERATED_DIR}/SiSyLVisitor.cpp
     ${ANTLR4_GENERATED_DIR}/SiSyLVisitor.h
 )
+set_source_files_properties(${ANTLR4_GEN_FILES} PROPERTIES SKIP_LINTING ON)
 
 add_custom_command(
     OUTPUT ${ANTLR4_GEN_FILES}
