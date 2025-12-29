@@ -21,13 +21,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build clang llvm-dev openjdk-17-jre
+          sudo apt-get install -y cmake ninja-build clang clang-tidy llvm-dev openjdk-17-jre
 
       - name: Configure LLVM CMake location
         run: echo "LLVM_DIR=$(llvm-config --cmakedir)" >> "$GITHUB_ENV"
 
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_CLANG_TIDY=clang-tidy
 
       - name: Build
         run: cmake --build build --config Release --parallel
