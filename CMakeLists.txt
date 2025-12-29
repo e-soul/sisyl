@@ -73,6 +73,7 @@ FetchContent_Declare(
     antlr4_runtime
     URL https://github.com/antlr/antlr4/archive/refs/tags/${ANTLR4_VERSION}.zip
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
+    SOURCE_SUBDIR runtime/Cpp
 )
 
 # Only build the runtime, not the entire ANTLR project
@@ -132,29 +133,23 @@ add_custom_command(
 # Custom target to ensure generation happens
 add_custom_target(generate_parser DEPENDS ${ANTLR4_GEN_FILES})
 
-# Make ANTLR4 runtime available - we only need the runtime subdirectory
-FetchContent_GetProperties(antlr4_runtime)
-if(NOT antlr4_runtime_POPULATED)
-    FetchContent_Populate(antlr4_runtime)
+# Make ANTLR4 runtime available
+FetchContent_MakeAvailable(antlr4_runtime)
 
-    # Workaround (MSVC): some ANTLR4 C++ runtime releases ship with
-    # ProfilingATNSimulator.cpp missing #include <chrono>, which breaks
-    # std::chrono::high_resolution_clock usage.
-    if (MSVC)
-        set(PROFILING_FILE "${antlr4_runtime_SOURCE_DIR}/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp")
-        if (EXISTS "${PROFILING_FILE}")
-            file(READ "${PROFILING_FILE}" PROFILING_CONTENT)
-            string(FIND "${PROFILING_CONTENT}" "#include <chrono>" HAS_CHRONO)
-            if(HAS_CHRONO EQUAL -1)
-                string(REPLACE "using namespace std::chrono;" "#include <chrono>\nusing namespace std::chrono;" PROFILING_CONTENT "${PROFILING_CONTENT}")
-                file(WRITE "${PROFILING_FILE}" "${PROFILING_CONTENT}")
-                message(STATUS "Patched ANTLR4 ProfilingATNSimulator.cpp to include <chrono> (MSVC workaround)")
-            endif()
+# Workaround (MSVC): some ANTLR4 C++ runtime releases ship with
+# ProfilingATNSimulator.cpp missing #include <chrono>, which breaks
+# std::chrono::high_resolution_clock usage.
+if (MSVC)
+    set(PROFILING_FILE "${antlr4_runtime_SOURCE_DIR}/runtime/Cpp/runtime/src/atn/ProfilingATNSimulator.cpp")
+    if (EXISTS "${PROFILING_FILE}")
+        file(READ "${PROFILING_FILE}" PROFILING_CONTENT)
+        string(FIND "${PROFILING_CONTENT}" "#include <chrono>" HAS_CHRONO)
+        if(HAS_CHRONO EQUAL -1)
+            string(REPLACE "using namespace std::chrono;" "#include <chrono>\nusing namespace std::chrono;" PROFILING_CONTENT "${PROFILING_CONTENT}")
+            file(WRITE "${PROFILING_FILE}" "${PROFILING_CONTENT}")
+            message(STATUS "Patched ANTLR4 ProfilingATNSimulator.cpp to include <chrono> (MSVC workaround)")
         endif()
     endif()
-
-    # Build only the C++ runtime
-    add_subdirectory(${antlr4_runtime_SOURCE_DIR}/runtime/Cpp ${antlr4_runtime_BINARY_DIR} EXCLUDE_FROM_ALL)
 endif()
 
 # Include directories for ANTLR4
