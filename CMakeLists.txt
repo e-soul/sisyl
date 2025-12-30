@@ -18,7 +18,7 @@
 #
 
 cmake_minimum_required(VERSION 3.20)
-project(sisyl CXX)
+project(sisyl C CXX)
 
 # Optional clang-tidy integration (set via -DSISYL_CLANG_TIDY=clang-tidy)
 set(SISYL_CLANG_TIDY "" CACHE STRING "Path to clang-tidy executable")
