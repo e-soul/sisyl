@@ -195,7 +195,7 @@ target_link_libraries(sisyl_lib ${LLVM_LIBS})
 
 function(enable_sisyl_clang_tidy target_name)
     if (SISYL_CLANG_TIDY)
-        set_target_properties(${target_name} PROPERTIES CXX_CLANG_TIDY "${SISYL_CLANG_TIDY};--header-filter=^${CMAKE_SOURCE_DIR}/")
+        set_target_properties(${target_name} PROPERTIES CXX_CLANG_TIDY "${SISYL_CLANG_TIDY};--header-filter=^${CMAKE_SOURCE_DIR}/(include|src)/")
     endif()
 endfunction()
 

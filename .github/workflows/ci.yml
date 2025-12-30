@@ -21,13 +21,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y cmake ninja-build clang clang-tidy gcc-14 g++-14 llvm-dev openjdk-17-jre
+          sudo apt-get install -y cmake ninja-build clang clang-tidy libc++-dev libc++abi-dev llvm-dev openjdk-17-jre
 
       - name: Configure LLVM CMake location
         run: echo "LLVM_DIR=$(llvm-config --cmakedir)" >> "$GITHUB_ENV"
 
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="--gcc-toolchain=/usr/lib/gcc/x86_64-linux-gnu/14" -DSISYL_CLANG_TIDY=clang-tidy
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_CXX_FLAGS="-stdlib=libc++" -DCMAKE_CXX_LINKER_FLAGS="-stdlib=libc++" -DSISYL_CLANG_TIDY=clang-tidy
 
       - name: Build
         run: cmake --build build --config Release --parallel
