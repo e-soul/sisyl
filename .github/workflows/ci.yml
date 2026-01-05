@@ -20,17 +20,27 @@ jobs:
 
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y cmake ninja-build clang llvm-dev openjdk-17-jre
+          sudo apt update
+          sudo apt install -y --no-install-recommends wget gnupg ca-certificates
+
+          wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/llvm-archive-keyring.gpg
+          echo "deb [signed-by=/usr/share/keyrings/llvm-archive-keyring.gpg] http://apt.llvm.org/noble/ llvm-toolchain-noble-21 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+
+          sudo apt update
+          sudo apt install -y --no-install-recommends \
+            cmake ninja-build \
+            llvm-21 llvm-21-dev llvm-21-tools \
+            clang-21 clang-tidy-21 lld-21 \
+            gcc-14 g++-14 libstdc++-14-dev
 
       - name: Configure LLVM CMake location
-        run: echo "LLVM_DIR=$(llvm-config --cmakedir)" >> "$GITHUB_ENV"
+        run: echo "LLVM_DIR=$(llvm-config-21 --cmakedir)" >> "$GITHUB_ENV"
 
       - name: Configure
-        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+        run: cmake --preset ninja-clang-21-gcc14-tidy-release
 
       - name: Build
-        run: cmake --build build --config Release --parallel
+        run: cmake --build --preset ninja-clang-21-gcc14-tidy-release
 
       - name: Test
-        run: ctest --test-dir build -C Release --output-on-failure
+        run: ctest --preset ninja-clang-21-gcc14-tidy-release

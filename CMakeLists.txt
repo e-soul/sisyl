@@ -18,43 +18,52 @@
 #
 
 cmake_minimum_required(VERSION 3.20)
-project(sisyl CXX)
+project(sisyl C CXX)
 
-# Use C++23 for the project (ANTLR4 runtime requires at least std::any)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Optionally enable warnings
-if (MSVC)
-    add_compile_options(/W4)
-else()
-    add_compile_options(-Wall -Wextra -pedantic)
-endif()
+option(SISYL_ENABLE_CLANG_TIDY "Run clang-tidy on SiSyL targets only" OFF)
+
+function(sisyl_configure_target targetName)
+    if (NOT SISYL_ENABLE_CLANG_TIDY)
+        return()
+    endif()
+
+    find_program(_sisyl_clang_tidy_exe NAMES clang-tidy-21 clang-tidy)
+    if (NOT _sisyl_clang_tidy_exe)
+        message(WARNING "SISYL_ENABLE_CLANG_TIDY is ON but clang-tidy was not found; skipping clang-tidy for target '${targetName}'.")
+        return()
+    endif()
+
+    set(_sisyl_tidy_args "${_sisyl_clang_tidy_exe}" "--header-filter=^${CMAKE_SOURCE_DIR}/(include|src|tests)/")
+    if (MSVC)
+        list(APPEND _sisyl_tidy_args "--extra-arg=/EHsc")
+    endif()
+    set_target_properties(${targetName} PROPERTIES CXX_CLANG_TIDY "${_sisyl_tidy_args}")
+endfunction()
 
 # -----------------------------------------------------------------------------
 # Find external dependencies
-#
-# LLVM is required for code generation.
-# On many distributions this can be installed via the package manager.
-# On Windows, download from https://releases.llvm.org/ or use vcpkg.
 
+# LLVM is required for code generation.
 find_package(LLVM CONFIG REQUIRED)
 message(STATUS "Found LLVM version ${LLVM_PACKAGE_VERSION}")
-message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
-include_directories(${LLVM_INCLUDE_DIRS})
-separate_arguments(LLVM_DEFINITIONS_LIST NATIVE_COMMAND ${LLVM_DEFINITIONS})
-add_definitions(${LLVM_DEFINITIONS_LIST})
+set(SISYL_LLVM_LIBS "")
+if (TARGET LLVM)
+    set(SISYL_LLVM_LIBS LLVM)
+else()
+    if (COMMAND llvm_map_components_to_libnames)
+        # Minimal set for this project (IR construction + verification + basic support).
+        llvm_map_components_to_libnames(SISYL_LLVM_LIBS core support analysis)
+    else()
+        message(FATAL_ERROR "LLVMConfig.cmake did not provide llvm_map_components_to_libnames() and no monolithic LLVM target was found.")
+    endif()
+endif()
+message(STATUS "Using LLVM libraries: ${SISYL_LLVM_LIBS}")
 
-# Map LLVM components to library names
-llvm_map_components_to_libnames(LLVM_LIBS
-    core
-    support
-    irreader
-    bitwriter
-    passes
-    target
-    analysis
-)
+# Find Java - required to run ANTLR4 tool
+find_package(Java COMPONENTS Runtime REQUIRED)
 
 # Use FetchContent for external dependencies
 include(FetchContent)
@@ -83,7 +92,6 @@ set(ANTLR_BUILD_SHARED OFF CACHE BOOL "" FORCE)
 
 # ANTLR4 generated directory
 set(ANTLR4_GENERATED_DIR ${CMAKE_CURRENT_BINARY_DIR}/generated)
-file(MAKE_DIRECTORY ${ANTLR4_GENERATED_DIR})
 
 # Download ANTLR4 JAR for code generation
 set(ANTLR4_JAR_LOCATION ${CMAKE_CURRENT_BINARY_DIR}/antlr-${ANTLR4_VERSION}-complete.jar)
@@ -101,9 +109,6 @@ if(NOT EXISTS ${ANTLR4_JAR_LOCATION})
     endif()
 endif()
 
-# Find Java - required to run ANTLR4 tool
-find_package(Java COMPONENTS Runtime REQUIRED)
-
 # Generate lexer and parser from grammar
 set(ANTLR4_GRAMMAR ${CMAKE_CURRENT_SOURCE_DIR}/grammar/SiSyL.g4)
 set(ANTLR4_GEN_FILES
@@ -119,6 +124,7 @@ set(ANTLR4_GEN_FILES
 
 add_custom_command(
     OUTPUT ${ANTLR4_GEN_FILES}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${ANTLR4_GENERATED_DIR}
     COMMAND ${Java_JAVA_EXECUTABLE} -jar ${ANTLR4_JAR_LOCATION}
             -Dlanguage=Cpp
             -visitor
@@ -152,11 +158,11 @@ if (MSVC)
     endif()
 endif()
 
-# Include directories for ANTLR4
-set(ANTLR4_INCLUDE_DIRS
-    ${antlr4_runtime_SOURCE_DIR}/runtime/Cpp/runtime/src
-    ${ANTLR4_GENERATED_DIR}
-)
+# Generated lexer/parser sources live in their own target so we can opt them out
+# of clang-tidy even when the rest of the project enables it.
+add_library(sisyl_parser STATIC ${ANTLR4_GEN_FILES})
+target_include_directories(sisyl_parser SYSTEM PUBLIC ${antlr4_runtime_SOURCE_DIR}/runtime/Cpp/runtime/src ${ANTLR4_GENERATED_DIR})
+target_link_libraries(sisyl_parser PUBLIC antlr4_static)
 
 # -----------------------------------------------------------------------------
 # GoogleTest integration
@@ -170,60 +176,54 @@ FetchContent_Declare(
     URL https://github.com/google/googletest/archive/refs/tags/v1.15.2.zip
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
-# For Windows: Prevent overriding the parent project's compiler/linker settings
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 enable_testing()
 
 # Build a library from the compiler sources (excluding main.cpp) for testing
-file(GLOB SISYL_LIB_SOURCES
+set(SISYL_LIB_SOURCES
     src/ast.cpp
     src/semantic_analyzer.cpp
     src/code_generator.cpp
     src/parser_driver.cpp
     src/ast_builder.cpp
 )
-add_library(sisyl_lib STATIC ${SISYL_LIB_SOURCES} ${ANTLR4_GEN_FILES})
+add_library(sisyl_lib STATIC ${SISYL_LIB_SOURCES})
 add_dependencies(sisyl_lib generate_parser)
-target_include_directories(sisyl_lib PUBLIC include ${ANTLR4_INCLUDE_DIRS})
-target_link_libraries(sisyl_lib antlr4_static)
-target_link_libraries(sisyl_lib ${LLVM_LIBS})
+target_include_directories(sisyl_lib PUBLIC include)
+target_include_directories(sisyl_lib SYSTEM PUBLIC ${LLVM_INCLUDE_DIRS})
+target_link_libraries(sisyl_lib PUBLIC sisyl_parser)
+target_link_libraries(sisyl_lib PUBLIC ${SISYL_LLVM_LIBS})
+
+# Skip linting tools (including clang-tidy) on generated parser sources.
+set_source_files_properties(${ANTLR4_GEN_FILES} PROPERTIES SKIP_LINTING ON)
+sisyl_configure_target(sisyl_lib)
 
 # Test executable - semantic tests
 add_executable(sisyl_tests tests/semantic_tests.cpp)
-target_include_directories(sisyl_tests PRIVATE include)
 target_link_libraries(sisyl_tests sisyl_lib gtest_main)
 include(GoogleTest)
 gtest_discover_tests(sisyl_tests)
 
+sisyl_configure_target(sisyl_tests)
+
 # Test executable - parser tests
 add_executable(parser_tests tests/parser_tests.cpp)
-target_include_directories(parser_tests PRIVATE include ${ANTLR4_INCLUDE_DIRS})
 target_link_libraries(parser_tests sisyl_lib gtest_main)
 gtest_discover_tests(parser_tests)
 
+sisyl_configure_target(parser_tests)
+
 # Test executable - code generator tests
 add_executable(codegen_tests tests/codegen_tests.cpp)
-target_include_directories(codegen_tests PRIVATE include)
 target_link_libraries(codegen_tests sisyl_lib gtest_main)
 gtest_discover_tests(codegen_tests)
 
+sisyl_configure_target(codegen_tests)
+
 # -----------------------------------------------------------------------------
-# Compiler sources
+# Compiler executable
 #
-file(GLOB SISYL_SOURCES
-    src/*.cpp
-)
-
-# Define the sisylc compiler executable.
-add_executable(sisylc ${SISYL_SOURCES} ${ANTLR4_GEN_FILES})
-add_dependencies(sisylc generate_parser)
-
-# Public include directory for our headers
-target_include_directories(sisylc PUBLIC include ${ANTLR4_INCLUDE_DIRS})
-
-# Link against ANTLR4 runtime
-target_link_libraries(sisylc antlr4_static)
-
-# Link against LLVM components (required).
-target_link_libraries(sisylc ${LLVM_LIBS})
+# Build the CLI driver as a thin binary that links against sisyl_lib.
+add_executable(sisylc src/main.cpp)
+target_link_libraries(sisylc PRIVATE sisyl_lib)
+sisyl_configure_target(sisylc)

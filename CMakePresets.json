@@ -1,0 +1,136 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "ninja-msvc-release",
+      "displayName": "Ninja Release (msvc)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-msvc",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    },
+    {
+      "name": "ninja-clangcl-release",
+      "displayName": "Ninja Release (clang-cl)",
+      "inherits": "ninja-msvc-release",
+      "binaryDir": "${sourceDir}/build-clangcl",
+      "cacheVariables": {
+        "CMAKE_C_COMPILER": "clang-cl",
+        "CMAKE_CXX_COMPILER": "clang-cl"
+      }
+    },
+    {
+      "name": "ninja-clangcl-tidy-release",
+      "displayName": "Ninja Release (clang-cl + clang-tidy)",
+      "inherits": "ninja-clangcl-release",
+      "binaryDir": "${sourceDir}/build-clangcl-tidy",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SISYL_ENABLE_CLANG_TIDY": "ON"
+      }
+    },
+    {
+      "name": "ninja-clang-21-gcc14-release",
+      "displayName": "Ninja Release (clang-21 + LLVM 21 + libstdc++ 14)",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-clang-21-gcc14",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_C_COMPILER": "clang-21",
+        "CMAKE_CXX_COMPILER": "clang++-21",
+        "LLVM_DIR": "/usr/lib/llvm-21/lib/cmake/llvm",
+        "CMAKE_CXX_FLAGS": "--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/14"
+      }
+    },
+    {
+      "name": "ninja-clang-21-gcc14-tidy-release",
+      "displayName": "Ninja Release (clang-21 + clang-tidy + LLVM 21 + libstdc++ 14)",
+      "inherits": "ninja-clang-21-gcc14-release",
+      "binaryDir": "${sourceDir}/build-clang-21-gcc14-tidy",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+        "SISYL_ENABLE_CLANG_TIDY": "ON"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "ninja-msvc-release",
+      "displayName": "Build (Release, msvc)",
+      "configurePreset": "ninja-msvc-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "ninja-clangcl-release",
+      "displayName": "Build (Release, clang-cl)",
+      "configurePreset": "ninja-clangcl-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "ninja-clangcl-tidy-release",
+      "displayName": "Build (Release, clang-cl + clang-tidy)",
+      "configurePreset": "ninja-clangcl-tidy-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "ninja-clang-21-gcc14-release",
+      "displayName": "Build (Release, clang-21 + LLVM 21 + libstdc++ 14)",
+      "configurePreset": "ninja-clang-21-gcc14-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "ninja-clang-21-gcc14-tidy-release",
+      "displayName": "Build (Release, clang-21 + clang-tidy + LLVM 21 + libstdc++ 14)",
+      "configurePreset": "ninja-clang-21-gcc14-tidy-release",
+      "configuration": "Release"
+    }
+  ],
+  "testPresets": [
+    {
+      "name": "ninja-msvc-release",
+      "displayName": "Test (Release, msvc)",
+      "configurePreset": "ninja-msvc-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ninja-clangcl-release",
+      "displayName": "Test (Release, clang-cl)",
+      "configurePreset": "ninja-clangcl-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ninja-clangcl-tidy-release",
+      "displayName": "Test (Release, clang-cl + clang-tidy)",
+      "configurePreset": "ninja-clangcl-tidy-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ninja-clang-21-gcc14-release",
+      "displayName": "Test (Release, clang-21 + LLVM 21 + libstdc++ 14)",
+      "configurePreset": "ninja-clang-21-gcc14-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "ninja-clang-21-gcc14-tidy-release",
+      "displayName": "Test (Release, clang-21 + clang-tidy + LLVM 21 + libstdc++ 14)",
+      "configurePreset": "ninja-clang-21-gcc14-tidy-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    }
+  ]
+}

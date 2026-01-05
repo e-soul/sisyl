@@ -78,10 +78,17 @@ On Windows, download and extract [clang+llvm-21.1.8-x86_64-pc-windows-msvc.tar.x
 Then run from the repo root:
 
 ```
-mkdir build
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build --config Release
 ctest --test-dir build -C Release --output-on-failure
+```
+
+or
+
+```
+cmake --preset ninja-clangcl-tidy-release
+cmake --build --preset ninja-clangcl-tidy-release
+ctest --preset ninja-clangcl-tidy-release
 ```
 
 This will produce the `sisylc` compiler executable.
