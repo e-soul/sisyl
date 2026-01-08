@@ -17,12 +17,6 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
- * parser_tests.cpp
- *
- * Unit tests for the SiSyL parser.
- */
-
 #include <gtest/gtest.h>
 
 #include "parser_driver.h"
@@ -127,27 +121,11 @@ TEST(Parser, FieldAccessInExpression) {
     ASSERT_TRUE(result);
 }
 
-TEST(Parser, SyntaxError) {
-    ParserDriver parser;
-    auto result = parser.parseString(R"(
-        Void test() {
-            Int64 x = ;
-        }
-    )");
-    EXPECT_FALSE(result);
-    ASSERT_TRUE(result.error().size() >= 1u);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Additional parser tests (migrated from legacy suite)
-///////////////////////////////////////////////////////////////////////////////
-
 ///////////////////////////////////////////////////////////////////////////////
 // Literal Parsing Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-// Test parsing integer literals
-TEST(ParserLegacy, IntLiterals) {
+TEST(Parser, IntLiterals) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -159,8 +137,7 @@ TEST(ParserLegacy, IntLiterals) {
     ASSERT_TRUE(result);
 }
 
-// Test parsing boolean literals
-TEST(ParserLegacy, BoolLiterals) {
+TEST(Parser, BoolLiterals) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -171,8 +148,7 @@ TEST(ParserLegacy, BoolLiterals) {
     ASSERT_TRUE(result);
 }
 
-// Test parsing string literals
-TEST(ParserLegacy, StringLiterals) {
+TEST(Parser, StringLiterals) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -187,8 +163,7 @@ TEST(ParserLegacy, StringLiterals) {
 // Expression Parsing Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-// Test arithmetic expressions
-TEST(ParserLegacy, ArithmeticExpressions) {
+TEST(Parser, ArithmeticExpressions) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -203,8 +178,7 @@ TEST(ParserLegacy, ArithmeticExpressions) {
     ASSERT_TRUE(result);
 }
 
-// Test comparison expressions
-TEST(ParserLegacy, ComparisonExpressions) {
+TEST(Parser, ComparisonExpressions) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -219,8 +193,7 @@ TEST(ParserLegacy, ComparisonExpressions) {
     ASSERT_TRUE(result);
 }
 
-// Test logical expressions
-TEST(ParserLegacy, LogicalExpressions) {
+TEST(Parser, LogicalExpressions) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -233,8 +206,7 @@ TEST(ParserLegacy, LogicalExpressions) {
     ASSERT_TRUE(result);
 }
 
-// Test unary expressions
-TEST(ParserLegacy, UnaryExpressions) {
+TEST(Parser, UnaryExpressions) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -247,8 +219,7 @@ TEST(ParserLegacy, UnaryExpressions) {
     ASSERT_TRUE(result);
 }
 
-// Test function call expressions
-TEST(ParserLegacy, FunctionCallExpressions) {
+TEST(Parser, FunctionCallExpressions) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Int64 getOne() { return 1; }
@@ -263,8 +234,7 @@ TEST(ParserLegacy, FunctionCallExpressions) {
     ASSERT_TRUE(result);
 }
 
-// Test new expressions
-TEST(ParserLegacy, NewExpressions) {
+TEST(Parser, NewExpressions) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         class Point { Int64 x; Int64 y; }
@@ -280,8 +250,7 @@ TEST(ParserLegacy, NewExpressions) {
 // Statement Parsing Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-// Test variable declarations
-TEST(ParserLegacy, VarDeclarations) {
+TEST(Parser, VarDeclarations) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -294,8 +263,7 @@ TEST(ParserLegacy, VarDeclarations) {
     ASSERT_TRUE(result);
 }
 
-// Test assignment statements
-TEST(ParserLegacy, AssignmentStatements) {
+TEST(Parser, AssignmentStatements) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -307,8 +275,7 @@ TEST(ParserLegacy, AssignmentStatements) {
     ASSERT_TRUE(result);
 }
 
-// Test if statements
-TEST(ParserLegacy, IfStatements) {
+TEST(Parser, IfStatements) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -326,8 +293,7 @@ TEST(ParserLegacy, IfStatements) {
     ASSERT_TRUE(result);
 }
 
-// Test while statements
-TEST(ParserLegacy, WhileStatements) {
+TEST(Parser, WhileStatements) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -340,8 +306,7 @@ TEST(ParserLegacy, WhileStatements) {
     ASSERT_TRUE(result);
 }
 
-// Test return statements
-TEST(ParserLegacy, ReturnStatements) {
+TEST(Parser, ReturnStatements) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void doNothing() {
@@ -357,8 +322,7 @@ TEST(ParserLegacy, ReturnStatements) {
     ASSERT_TRUE(result);
 }
 
-// Test nested blocks
-TEST(ParserLegacy, NestedBlocks) {
+TEST(Parser, NestedBlocks) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -378,8 +342,7 @@ TEST(ParserLegacy, NestedBlocks) {
 // Field Access Parsing Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-// Test field access in assignments
-TEST(ParserLegacy, FieldAccess) {
+TEST(Parser, FieldAccessInAssignment) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         class Point { Int64 x; Int64 y; }
@@ -397,8 +360,7 @@ TEST(ParserLegacy, FieldAccess) {
 // Comment Parsing Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-// Test that comments are ignored
-TEST(ParserLegacy, Comments) {
+TEST(Parser, Comments) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         // This is a comment
@@ -414,8 +376,7 @@ TEST(ParserLegacy, Comments) {
 // Error Handling Tests
 ///////////////////////////////////////////////////////////////////////////////
 
-// Test syntax error detection
-TEST(ParserLegacy, SyntaxError) {
+TEST(Parser, SyntaxError) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -426,8 +387,7 @@ TEST(ParserLegacy, SyntaxError) {
     ASSERT_TRUE(result.error().size() >= 1u);
 }
 
-// Test missing semicolon
-TEST(ParserLegacy, MissingSemicolon) {
+TEST(Parser, MissingSemicolon) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -438,8 +398,7 @@ TEST(ParserLegacy, MissingSemicolon) {
     ASSERT_TRUE(result.error().size() >= 1u);
 }
 
-// Test missing brace
-TEST(ParserLegacy, MissingBrace) {
+TEST(Parser, MissingBrace) {
     ParserDriver parser;
     auto result = parser.parseString(R"(
         Void test() {
@@ -453,8 +412,7 @@ TEST(ParserLegacy, MissingBrace) {
 // Integration Tests (Parser + Semantic)
 ///////////////////////////////////////////////////////////////////////////////
 
-// Test that parsed code can be analyzed semantically
-TEST(ParserLegacyIntegration, ParseAndAnalyze) {
+TEST(ParserIntegration, ParseAndAnalyze) {
     ParserDriver parser;
     auto parseResult = parser.parseString(R"(
         Int64 factorial(Int64 n) {
@@ -470,14 +428,12 @@ TEST(ParserLegacyIntegration, ParseAndAnalyze) {
         }
     )");
     ASSERT_TRUE(parseResult);
-    
-    // Run semantic analysis on parsed AST
+
     SemanticAnalyzer sem;
     EXPECT_TRUE(sem.analyze(*parseResult));
 }
 
-// Test ownership tracking works with parsed code
-TEST(ParserLegacyIntegration, OwnershipTracking) {
+TEST(ParserIntegration, OwnershipTracking) {
     ParserDriver parser;
     auto parseResult = parser.parseString(R"(
         class Node { Int64 value; }
@@ -496,8 +452,7 @@ TEST(ParserLegacyIntegration, OwnershipTracking) {
     EXPECT_TRUE(sem.analyze(*parseResult));
 }
 
-// Test use-after-move detected in parsed code
-TEST(ParserLegacyIntegration, UseAfterMoveDetected) {
+TEST(ParserIntegration, UseAfterMoveDetected) {
     ParserDriver parser;
     auto parseResult = parser.parseString(R"(
         class Node { Int64 value; }

@@ -16,15 +16,6 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * parser_driver.cpp
- *
- * Implementation of the ParserDriver using ANTLR4.  This class constructs
- * an ANTLR input stream from the source, runs the generated SiSyLLexer and
- * SiSyLParser, and then applies an AstBuilder visitor to build the AST.
- */
-
 #include "parser_driver.h"
 #include "ast_builder.h"
 
@@ -58,55 +49,45 @@ public:
     }
 };
 
-ParserDriver::ParserDriver() = default;
-
 std::expected<std::shared_ptr<Program>, std::vector<std::string>> ParserDriver::parseString(std::string_view source) {
     std::vector<std::string> errors;
 
     const std::string sourceStr{source};
 
-    // Create ANTLR input stream from source string
     antlr4::ANTLRInputStream input(sourceStr);
 
-    // Create lexer
     SiSyLLexer lexer(&input);
     ErrorCollector lexerErrors;
     lexer.removeErrorListeners();
     lexer.addErrorListener(&lexerErrors);
 
-    // Create token stream
     antlr4::CommonTokenStream tokens(&lexer);
 
-    // Create parser
     SiSyLParser parser(&tokens);
     ErrorCollector parserErrors;
     parser.removeErrorListeners();
     parser.addErrorListener(&parserErrors);
 
-    // Parse the program
     SiSyLParser::ProgramContext *tree = parser.program();
 
-    // Collect errors from lexer and parser
     errors.insert(errors.end(), lexerErrors.errors.begin(), lexerErrors.errors.end());
     errors.insert(errors.end(), parserErrors.errors.begin(), parserErrors.errors.end());
 
-    // If there were parse errors, return nullptr
     if (!errors.empty()) {
         return std::unexpected(std::move(errors));
     }
 
-    // Build AST from parse tree
     AstBuilder builder;
     auto result = builder.visit(tree);
     return std::any_cast<std::shared_ptr<Program>>(result);
 }
 
 std::expected<std::shared_ptr<Program>, std::vector<std::string>> ParserDriver::parseFile(const std::filesystem::path &path) {
-    std::ifstream in(path);
-    if (!in) {
+    std::ifstream sourceStream(path);
+    if (!sourceStream) {
         return std::unexpected(std::vector<std::string>{"Failed to open file: " + path.string()});
     }
     std::ostringstream buf;
-    buf << in.rdbuf();
+    buf << sourceStream.rdbuf();
     return parseString(buf.str());
 }

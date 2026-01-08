@@ -3,5 +3,8 @@ Checks: >
   bugprone-*,
   clang-analyzer-*,
   modernize-*,
+  -modernize-use-trailing-return-type,
   performance-*,
-  readability-*
+  -performance-avoid-endl,
+  readability-*,
+  -readability-implicit-bool-conversion

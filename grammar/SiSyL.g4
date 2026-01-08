@@ -20,9 +20,8 @@
 // This file defines the grammar for the SiSyL language.  SiSyL is a small
 // systems programming language with a Java‑like syntax, single ownership
 // semantics and no garbage collector or borrow checker.  The grammar
-// described here is intentionally simple, covering only the minimal
-// features required for the MVP: primitive types, classes, variables,
-// assignments, free functions and basic control flow.
+// described here is intentionally simple, covering only:
+// primitive types, classes, variables, assignments, free functions and basic control flow.
 
 grammar SiSyL;
 
@@ -51,8 +50,7 @@ classFields
     : (type IDENT ';')*
     ;
 
-// Function declarations consist of a return type, name, parameter list and
-// body.  All functions are free‑standing; there is no concept of classes.
+// Function declarations consist of a return type, name, parameter list and body.
 funcDecl
     : type IDENT '(' paramList? ')' block
     ;
@@ -66,13 +64,12 @@ param
     : type IDENT
     ;
 
-// A block of statements enclosed in braces.  Blocks introduce a new
-// variable scope.
+// A block of statements enclosed in braces.  Blocks introduce a new variable scope.
 block
     : '{' statement* '}'
     ;
 
-// Statements supported by the MVP.  An expression statement evaluates
+// Supported statements. An expression statement evaluates
 // an expression and discards its value.  Block statements allow nested scopes.
 statement
     : varDecl
@@ -230,7 +227,7 @@ STRING_LIT
     ;
 
 // Whitespace and comments are skipped.  We support C‑style single line
-// comments starting with //.  More elaborate comment forms could be added.
+// comments starting with //.
 WS
     : [ \t\r\n]+ -> skip
     ;

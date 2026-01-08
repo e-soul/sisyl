@@ -16,9 +16,7 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#ifndef SISYL_TYPE_H
-#define SISYL_TYPE_H
+#pragma once
 
 #include <string>
 #include <string_view>
@@ -114,5 +112,3 @@ using Type = std::variant<Primitive, std::string>; // string holds class name
 }
 
 } // namespace sisyl
-
-#endif // SISYL_TYPE_H

@@ -10,32 +10,15 @@ generates efficient native code through LLVM.
 
 ## Motivation
 
-Modern systems languages like Rust prove that memory safety and high
-performance are not mutually exclusive. However, the complexity of
-borrow checking and lifetimes can be daunting. SiSyL takes a more
-minimalistic approach: each resource has exactly one owner, ownership
-can be moved but never duplicated and resources are automatically
+SiSyL takes a more minimalistic approach: each resource has exactly one owner,
+ownership can be moved but never duplicated and resources are automatically
 freed when their owner goes out of scope.
 By enforcing these rules at compile time the language
-prevents use‑after‑free, double free and leaks without a runtime
-collector.
-
-## Project Structure
-
-```
-sisyl/
-├── grammar/            # ANTLR4 grammar for the language (SiSyL.g4)
-├── include/            # Public header files (AST, semantic analysis, codegen)
-├── src/                # Source code for compiler phases and main driver
-├── tests/              # GoogleTest unit tests
-├── CMakeLists.txt      # Build script
-└── README.md           # This file
-```
+prevents use‑after‑free, double free and leaks without a runtime collector.
 
 ### Grammar
 
-The language syntax is defined in [`grammar/SiSyL.g4`](grammar/SiSyL.g4)
-using ANTLR4. SiSyL supports:
+The language syntax is defined using ANTLR4. SiSyL supports:
 
 - Primitive types `Int64`, `Bool` and `Str`.
 - Class definitions with typed fields.
@@ -45,7 +28,7 @@ using ANTLR4. SiSyL supports:
 - Expressions with arithmetic, logical and relational operators.
 - Function calls and object allocation with `new`.
 
-### Compiler Phases
+### Compiler Architecture
 
 SiSyL's compiler follows a traditional pipeline:
 
@@ -68,27 +51,26 @@ SiSyL's compiler follows a traditional pipeline:
 
 ## Building
 
-The project uses CMake for its build system. To build the compiler and
-tests you need a C++ toolchain and the LLVM development libraries.
-Additionally, generating the parser requires ANTLR4 and a Java 11+ runtime.
+Generating the parser requires ANTLR4 and a Java 11+ runtime.
+To build the compiler and tests you need a C++ toolchain and the LLVM development libraries.
 
-On Windows, download and extract [clang+llvm-21.1.8-x86_64-pc-windows-msvc.tar.xz](https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.8/clang+llvm-21.1.8-x86_64-pc-windows-msvc.tar.xz). Then set an env var pointing to the extracted content, e.g. `set LLVM_DIR=C:\clang+llvm-21.1.8-x86_64-pc-windows-msvc`
-
+- On Windows, install MSVC + Clang, then download and extract [clang+llvm-21.1.8-x86_64-pc-windows-msvc.tar.xz](https://github.com/llvm/llvm-project/releases/download/llvmorg-21.1.8/clang+llvm-21.1.8-x86_64-pc-windows-msvc.tar.xz). Set an env var pointing to the extracted content, e.g. `set LLVM_DIR=C:\clang+llvm-21.1.8-x86_64-pc-windows-msvc`
+- On POSIX, see the [build workflow](.github/workflows/ci.yml)
 
 Then run from the repo root:
 
 ```
-cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
-cmake --build build --config Release
-ctest --test-dir build -C Release --output-on-failure
+cmake --preset ninja-clangcl-release
+cmake --build --preset ninja-clangcl-release
+ctest --preset ninja-clangcl-release
 ```
 
 or
 
 ```
-cmake --preset ninja-clangcl-tidy-release
-cmake --build --preset ninja-clangcl-tidy-release
-ctest --preset ninja-clangcl-tidy-release
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build --config Release
+ctest --test-dir build -C Release --output-on-failure
 ```
 
 This will produce the `sisylc` compiler executable.
@@ -98,7 +80,7 @@ This will produce the `sisylc` compiler executable.
 The `sisylc` compiler currently emits LLVM IR (text). To produce a native
 executable, compile that IR with a tool like `clang`.
 
-### Compile a `.sisyl` file to an executable
+### Compile a `.sisyl` file to an executable on Windows.
 
 ```sh
 # 1) Emit LLVM IR

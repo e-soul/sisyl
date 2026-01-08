@@ -16,17 +16,6 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * code_generator.cpp
- *
- * Implementation of the code generation phase for SiSyL. This creates an LLVM
- * module, generates IR for each AST node, and provides methods to output the IR.
- *
- * This implementation uses LLVM's opaque pointer model (LLVM 15+) where all
- * pointers are represented as ptr without explicit pointee types.
- */
-
 #include "code_generator.h"
 #include "type.h"
 
@@ -39,20 +28,10 @@
 
 using namespace sisyl;
 
-// ============================================================================
-// Constructor and Destructor
-// ============================================================================
-
 CodeGenerator::CodeGenerator() {
     lastValue = nullptr;
     currentFunction = nullptr;
 }
-
-CodeGenerator::~CodeGenerator() = default;
-
-// ============================================================================
-// Main Generation Entry Point
-// ============================================================================
 
 std::expected<std::string, CodegenDiagnostics> CodeGenerator::generateIR(const std::shared_ptr<Program> &program) {
     if (!program) {
@@ -119,10 +98,9 @@ llvm::Type *CodeGenerator::getLLVMType(const Type &type) {
 }
 
 llvm::AllocaInst *CodeGenerator::createEntryBlockAlloca(llvm::Function *func,
-                                                         const std::string &varName,
-                                                         llvm::Type *type) {
-    llvm::IRBuilder<> tmpBuilder(&func->getEntryBlock(),
-                                  func->getEntryBlock().begin());
+                                                        const std::string &varName,
+                                                        llvm::Type *type) {
+    llvm::IRBuilder<> tmpBuilder(&func->getEntryBlock(), func->getEntryBlock().begin());
     return tmpBuilder.CreateAlloca(type, nullptr, varName);
 }
 
@@ -138,10 +116,6 @@ int CodeGenerator::getFieldIndex(const std::string &className, const std::string
     }
     return -1;
 }
-
-// ============================================================================
-// Visitor Implementations
-// ============================================================================
 
 void CodeGenerator::visit(Program &node) {
     // First pass: declare all class types
@@ -182,7 +156,6 @@ void CodeGenerator::visit(Program &node) {
 }
 
 void CodeGenerator::visit(ClassDecl &node) {
-    // Create LLVM struct type
     std::vector<llvm::Type *> fieldTypes;
     std::vector<std::pair<Type, std::string>> fieldInfo;
     
@@ -226,12 +199,10 @@ void CodeGenerator::visit(FuncDecl &node) {
     if (!func) return;
     
     currentFunction = func;
-    
-    // Create entry basic block
+
     llvm::BasicBlock *entryBB = llvm::BasicBlock::Create(*context, "entry", func);
     builder->SetInsertPoint(entryBB);
-    
-    // Clear named values and variable types for this function
+
     namedValues.clear();
     variableTypes.clear();
     
@@ -269,7 +240,6 @@ void CodeGenerator::visit(FuncDecl &node) {
 void CodeGenerator::visit(BlockStmt &node) {
     for (auto &stmt : node.statements) {
         stmt->accept(*this);
-        // Stop generating if we hit a terminator (return, etc.)
         if (builder->GetInsertBlock()->getTerminator()) {
             break;
         }
@@ -373,11 +343,9 @@ void CodeGenerator::visit(AssignStmt &node) {
 }
 
 void CodeGenerator::visit(IfStmt &node) {
-    // Evaluate condition
     node.condition->accept(*this);
     llvm::Value *condValue = lastValue;
-    
-    // Convert condition to bool if needed (compare with 0)
+
     if (!condValue->getType()->isIntegerTy(1)) {
         condValue = builder->CreateICmpNE(
             condValue,
@@ -485,7 +453,6 @@ void CodeGenerator::visit(BoolLiteral &node) {
 }
 
 void CodeGenerator::visit(StringLiteral &node) {
-    // Create a global string constant
     lastValue = builder->CreateGlobalString(node.value, "str");
 }
 
@@ -711,7 +678,6 @@ void CodeGenerator::visit(BinaryOp &node) {
 }
 
 void CodeGenerator::visit(FuncCall &node) {
-    // Look up the function
     llvm::Function *callee = module->getFunction(node.callee);
     
     // Handle built-in functions
@@ -791,7 +757,6 @@ void CodeGenerator::visit(FuncCall &node) {
 }
 
 void CodeGenerator::visit(NewExpr &node) {
-    // Find the class type
     auto it = classTypes.find(node.typeName);
     if (it == classTypes.end()) {
         lastValue = nullptr;
@@ -799,8 +764,7 @@ void CodeGenerator::visit(NewExpr &node) {
     }
     
     llvm::StructType *structType = it->second;
-    
-    // Declare malloc if not already declared
+
     llvm::Function *mallocFunc = module->getFunction("malloc");
     if (!mallocFunc) {
         std::vector<llvm::Type *> mallocArgs;

@@ -52,8 +52,7 @@ int main(int argc, char **argv) {
     std::string inputFile;
     std::string outputFile;
     bool emitIR = false;
-    
-    // Parse command line arguments
+
     for (int i = 1; i < argc; ++i) {
         if (std::strcmp(argv[i], "-h") == 0 || std::strcmp(argv[i], "--help") == 0) {
             printUsage(argv[0]);
@@ -87,7 +86,6 @@ int main(int argc, char **argv) {
     if (!inputFile.empty()) {
         programResult = parser.parseFile(std::filesystem::path{inputFile});
     } else {
-        // Read from stdin
         std::istreambuf_iterator<char> begin(std::cin), end;
         std::string input(begin, end);
         programResult = parser.parseString(input);
@@ -103,7 +101,6 @@ int main(int argc, char **argv) {
 
     const std::shared_ptr<Program> &program = *programResult;
 
-    // Run semantic analysis
     SemanticAnalyzer sem;
     if (auto semResult = sem.analyze(program); !semResult) {
         std::cerr << "Semantic errors detected:" << std::endl;
@@ -113,7 +110,6 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    // Run code generation
     CodeGenerator codegen;
     auto irResult = codegen.generateIR(program);
     if (!irResult) {
@@ -126,7 +122,6 @@ int main(int argc, char **argv) {
 
     const std::string &irText = *irResult;
 
-    // Output the generated IR
     if (emitIR || !outputFile.empty()) {
         if (!outputFile.empty()) {
             auto writeResult = CodeGenerator::writeIRToFile(std::filesystem::path{outputFile}, irText);

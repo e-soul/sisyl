@@ -17,24 +17,12 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
- * codegen_tests.cpp
- *
- * Unit tests for the code generation phase of the SiSyL compiler.  These
- * tests verify that the CodeGenerator produces valid LLVM IR for various
- * AST constructs.
- */
-
 #include <gtest/gtest.h>
 #include "code_generator.h"
 
 #include <string_view>
 
 using namespace sisyl;
-
-// -----------------------------------------------------------------------------
-// Codegen tests (generateIR + Int64/i64)
-// -----------------------------------------------------------------------------
 
 static Type T(std::string_view s) {
     return parseType(s);

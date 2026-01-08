@@ -16,28 +16,10 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * ast.h
- *
- * This header defines the abstract syntax tree for the SiSyL language.  Each
- * node class represents a syntactic construct in the language.  The AST is
- * built by visiting the ANTLR parse tree and constructing appropriate C++
- * objects.  Semantic analysis and code generation operate on this AST.
- *
- * The design loosely follows the visitor pattern: each node inherits from
- * AstNode and implements an accept() function that dispatches to a visitor.
- * For the purposes of this MVP we keep the visitor interface simple and
- * concentrated in SemanticAnalyzer and CodeGenerator.  Additional visitors
- * could be added later (e.g. pretty printing).
- */
-
-#ifndef SISYL_AST_H
-#define SISYL_AST_H
+#pragma once
 
 #include "type.h"
 
-#include <cstdint>
 #include <string>
 #include <vector>
 #include <memory>
@@ -45,23 +27,17 @@
 
 namespace sisyl {
 
-// Forward declarations of visitors
 class SemanticAnalyzer;
 class CodeGenerator;
 
-/* Base class for all AST nodes.  Every node has a source location (optional)
- * and implements accept methods for visitors.  The destructor is virtual to
- * allow deletion via base pointer.  We use std::shared_ptr to manage
- * ownership of nodes within the AST. */
 class AstNode {
 public:
     virtual ~AstNode() = default;
-    // Accept methods to be overridden in derived classes
+
     virtual void accept(SemanticAnalyzer &visitor) = 0;
     virtual void accept(CodeGenerator &visitor) = 0;
 };
 
-// Base class for expressions
 class Expression : public AstNode {
 public:
     // Expressions may have a deduced or declared type attached after
@@ -70,13 +46,11 @@ public:
     virtual ~Expression() = default;
 };
 
-// Base class for statements
 class Statement : public AstNode {
 public:
     virtual ~Statement() = default;
 };
 
-// Literal expressions
 class IntLiteral : public Expression {
 public:
     std::int64_t value;
@@ -101,7 +75,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Variable reference.  May refer to a local variable, parameter or global.
 class VarRef : public Expression {
 public:
     std::string name;
@@ -110,7 +83,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Field access (e.g. a.b.c).  Represented as a sequence of identifiers.
 class FieldAccess : public Expression {
 public:
     std::vector<std::string> path;
@@ -119,7 +91,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Unary operator expression
 class UnaryOp : public Expression {
 public:
     std::string op;
@@ -130,7 +101,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Binary operator expression
 class BinaryOp : public Expression {
 public:
     std::string op;
@@ -142,7 +112,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Function call expression
 class FuncCall : public Expression {
 public:
     std::string callee;
@@ -153,7 +122,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Object allocation expression (new Type())
 class NewExpr : public Expression {
 public:
     std::string typeName;
@@ -161,8 +129,6 @@ public:
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
-
-// Statement classes
 
 // A block of statements introduces a new scope.  It owns a list of
 // statements executed sequentially.
@@ -190,7 +156,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Assignment statement.  Assigns the result of expr to location.
 class AssignStmt : public Statement {
 public:
     std::shared_ptr<Expression> location;
@@ -201,7 +166,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// If/else statement.  The else branch may be null.
 class IfStmt : public Statement {
 public:
     std::shared_ptr<Expression> condition;
@@ -215,7 +179,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// While statement
 class WhileStmt : public Statement {
 public:
     std::shared_ptr<Expression> condition;
@@ -226,7 +189,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Return statement.  Returns an optional expression.
 class ReturnStmt : public Statement {
 public:
     std::shared_ptr<Expression> expr;
@@ -236,8 +198,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Expression used as a statement.  Allows function calls or other
-// expressions whose value is ignored.
 class ExprStmt : public Statement {
 public:
     std::shared_ptr<Expression> expr;
@@ -246,11 +206,9 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Top level class declaration
 class ClassDecl : public AstNode {
 public:
     std::string name;
-    // Each field is a pair (type, name)
     std::vector<std::pair<Type, std::string>> fields;
     ClassDecl(std::string n, std::vector<std::pair<Type, std::string>> f)
         : name(std::move(n)), fields(std::move(f)) {}
@@ -258,14 +216,11 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// Function parameter
 struct Parameter {
     Type type;
     std::string name;
 };
 
-// Top level function declaration.  Holds the return type, name,
-// parameters and the body block.
 class FuncDecl : public AstNode {
 public:
     Type returnType;
@@ -281,8 +236,6 @@ public:
     void accept(CodeGenerator &visitor) override;
 };
 
-// The top level AST represents a program: a list of class and function
-// declarations.
 class Program : public AstNode {
 public:
     std::vector<std::shared_ptr<ClassDecl>> classes;
@@ -292,5 +245,3 @@ public:
 };
 
 } // namespace sisyl
-
-#endif // SISYL_AST_H

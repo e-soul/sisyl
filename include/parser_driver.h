@@ -16,19 +16,7 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * parser_driver.h
- *
- * Declares a thin wrapper around the ANTLR4 generated parser for SiSyL.  The
- * ParserDriver exposes a simple parse() method that takes source code as a
- * string or file and returns an AST built by the AstBuilder visitor.  It
- * encapsulates the ANTLR lexer, parser and error listeners so that the rest
- * of the compiler does not depend directly on ANTLR headers.
- */
-
-#ifndef SISYL_PARSER_DRIVER_H
-#define SISYL_PARSER_DRIVER_H
+#pragma once
 
 #include "ast.h"
 
@@ -41,18 +29,14 @@
 
 namespace sisyl {
 
+/**
+ * Encapsulates the ANTLR lexer, parser and error listeners so that the rest
+ * of the compiler does not depend directly on ANTLR headers.
+ */
 class ParserDriver {
 public:
-    ParserDriver();
-    
-    // Parse the given source string and return a Program AST.  On error
-    // returns std::unexpected(errors).
     [[nodiscard]] std::expected<std::shared_ptr<Program>, std::vector<std::string>> parseString(std::string_view source);
-    
-    // Parse a file from disk.  Convenience wrapper around parseString.
     [[nodiscard]] std::expected<std::shared_ptr<Program>, std::vector<std::string>> parseFile(const std::filesystem::path &path);
 };
 
 } // namespace sisyl
-
-#endif // SISYL_PARSER_DRIVER_H

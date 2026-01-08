@@ -16,83 +16,56 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * ast_builder.h
- *
- * Defines the AstBuilder class, an ANTLR4 visitor that traverses the parse
- * tree generated from SiSyL source code and constructs the corresponding AST.
- * The visitor pattern maps each grammar rule to a visit method that creates
- * AST nodes using the classes defined in ast.h.
- */
-
-#ifndef SISYL_AST_BUILDER_H
-#define SISYL_AST_BUILDER_H
+#pragma once
 
 #include "ast.h"
 #include "SiSyLBaseVisitor.h"
 
-#include <memory>
-#include <string>
-#include <vector>
-
 namespace sisyl {
 
 /**
- * AstBuilder visits the ANTLR4 parse tree and produces an AST.
- *
- * Each visit method returns an antlrcpp::Any containing the constructed
- * AST node (typically a shared_ptr).  Top level visitProgram returns
- * a shared_ptr<Program>.
+ * Visits the ANTLR4 parse tree to construct an AST.
+ * Each visit method returns an std::any holding a shared_ptr to an AST node.
  */
 class AstBuilder : public SiSyLBaseVisitor {
 public:
     AstBuilder() = default;
 
-    // Program: (classDecl | funcDecl)* EOF
-    antlrcpp::Any visitProgram(SiSyLParser::ProgramContext *ctx) override;
+   std::any visitProgram(SiSyLParser::ProgramContext *ctx) override;
 
-    // Class declaration
-    antlrcpp::Any visitClassDecl(SiSyLParser::ClassDeclContext *ctx) override;
-    antlrcpp::Any visitClassFields(SiSyLParser::ClassFieldsContext *ctx) override;
+   // Class and functioun
+   std::any visitClassDecl(SiSyLParser::ClassDeclContext *ctx) override;
+   std::any visitClassFields(SiSyLParser::ClassFieldsContext *ctx) override;
+   std::any visitFuncDecl(SiSyLParser::FuncDeclContext *ctx) override;
+   std::any visitParamList(SiSyLParser::ParamListContext *ctx) override;
+   std::any visitParam(SiSyLParser::ParamContext *ctx) override;
 
-    // Function declaration
-    antlrcpp::Any visitFuncDecl(SiSyLParser::FuncDeclContext *ctx) override;
-    antlrcpp::Any visitParamList(SiSyLParser::ParamListContext *ctx) override;
-    antlrcpp::Any visitParam(SiSyLParser::ParamContext *ctx) override;
+   // Block and statements
+   std::any visitBlock(SiSyLParser::BlockContext *ctx) override;
+   std::any visitStatement(SiSyLParser::StatementContext *ctx) override;
+   std::any visitBlockStmt(SiSyLParser::BlockStmtContext *ctx) override;
+   std::any visitVarDecl(SiSyLParser::VarDeclContext *ctx) override;
+   std::any visitAssignStmt(SiSyLParser::AssignStmtContext *ctx) override;
+   std::any visitIfStmt(SiSyLParser::IfStmtContext *ctx) override;
+   std::any visitWhileStmt(SiSyLParser::WhileStmtContext *ctx) override;
+   std::any visitReturnStmt(SiSyLParser::ReturnStmtContext *ctx) override;
+   std::any visitExprStmt(SiSyLParser::ExprStmtContext *ctx) override;
 
-    // Block and statements
-    antlrcpp::Any visitBlock(SiSyLParser::BlockContext *ctx) override;
-    antlrcpp::Any visitStatement(SiSyLParser::StatementContext *ctx) override;
-    antlrcpp::Any visitBlockStmt(SiSyLParser::BlockStmtContext *ctx) override;
-    antlrcpp::Any visitVarDecl(SiSyLParser::VarDeclContext *ctx) override;
-    antlrcpp::Any visitAssignStmt(SiSyLParser::AssignStmtContext *ctx) override;
-    antlrcpp::Any visitIfStmt(SiSyLParser::IfStmtContext *ctx) override;
-    antlrcpp::Any visitWhileStmt(SiSyLParser::WhileStmtContext *ctx) override;
-    antlrcpp::Any visitReturnStmt(SiSyLParser::ReturnStmtContext *ctx) override;
-    antlrcpp::Any visitExprStmt(SiSyLParser::ExprStmtContext *ctx) override;
+   // Expressions
+   std::any visitExpression(SiSyLParser::ExpressionContext *ctx) override;
+   std::any visitLogicalOrExpr(SiSyLParser::LogicalOrExprContext *ctx) override;
+   std::any visitLogicalAndExpr(SiSyLParser::LogicalAndExprContext *ctx) override;
+   std::any visitEqualityExpr(SiSyLParser::EqualityExprContext *ctx) override;
+   std::any visitRelationalExpr(SiSyLParser::RelationalExprContext *ctx) override;
+   std::any visitAddExpr(SiSyLParser::AddExprContext *ctx) override;
+   std::any visitMulExpr(SiSyLParser::MulExprContext *ctx) override;
+   std::any visitUnaryExpr(SiSyLParser::UnaryExprContext *ctx) override;
+   std::any visitPrimary(SiSyLParser::PrimaryContext *ctx) override;
 
-    // Expressions
-    antlrcpp::Any visitExpression(SiSyLParser::ExpressionContext *ctx) override;
-    antlrcpp::Any visitLogicalOrExpr(SiSyLParser::LogicalOrExprContext *ctx) override;
-    antlrcpp::Any visitLogicalAndExpr(SiSyLParser::LogicalAndExprContext *ctx) override;
-    antlrcpp::Any visitEqualityExpr(SiSyLParser::EqualityExprContext *ctx) override;
-    antlrcpp::Any visitRelationalExpr(SiSyLParser::RelationalExprContext *ctx) override;
-    antlrcpp::Any visitAddExpr(SiSyLParser::AddExprContext *ctx) override;
-    antlrcpp::Any visitMulExpr(SiSyLParser::MulExprContext *ctx) override;
-    antlrcpp::Any visitUnaryExpr(SiSyLParser::UnaryExprContext *ctx) override;
-    antlrcpp::Any visitPrimary(SiSyLParser::PrimaryContext *ctx) override;
-
-    // Location and type
-    antlrcpp::Any visitLocation(SiSyLParser::LocationContext *ctx) override;
-    antlrcpp::Any visitType(SiSyLParser::TypeContext *ctx) override;
-    antlrcpp::Any visitArgList(SiSyLParser::ArgListContext *ctx) override;
-
-private:
-    // Helper to extract text and strip quotes from string literals
-    std::string unquoteString(const std::string &quoted);
+   // Location and type
+   std::any visitLocation(SiSyLParser::LocationContext *ctx) override;
+   std::any visitType(SiSyLParser::TypeContext *ctx) override;
+   std::any visitArgList(SiSyLParser::ArgListContext *ctx) override;
 };
 
 } // namespace sisyl
-
-#endif // SISYL_AST_BUILDER_H

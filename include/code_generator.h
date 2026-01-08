@@ -16,20 +16,7 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * code_generator.h
- *
- * Defines the code generation phase of the SiSyL compiler.  The
- * CodeGenerator walks the semantically analysed AST and emits LLVM IR using
- * the LLVM C++ API.  The resulting IR can be compiled to machine code via
- * LLVM's JIT or ahead-of-time compiler.
- *
- * The generator uses the LLVM C++ API to build IR.
- */
-
-#ifndef SISYL_CODE_GENERATOR_H
-#define SISYL_CODE_GENERATOR_H
+#pragma once
 
 #include "ast.h"
 
@@ -53,19 +40,20 @@ namespace sisyl {
 
 using CodegenDiagnostics = std::vector<std::string>;
 
+/**
+ * Walks the semantically analysed AST and emits LLVM IR using
+ * the LLVM C++ API. The resulting IR can be compiled to machine
+ * code via LLVM's JIT or ahead-of-time compiler. 
+ */
 class CodeGenerator {
 public:
     CodeGenerator();
-    ~CodeGenerator();
+    ~CodeGenerator() = default;
 
-    // Generate LLVM IR for the whole program and return it as a string.
     [[nodiscard]] std::expected<std::string, CodegenDiagnostics> generateIR(const std::shared_ptr<Program> &program);
 
-    // Write IR text to a file.
-    [[nodiscard]] static std::expected<void, std::string> writeIRToFile(const std::filesystem::path &filename,
-                                                                        std::string_view irText);
+    [[nodiscard]] static std::expected<void, std::string> writeIRToFile(const std::filesystem::path &filename, std::string_view irText);
 
-    // Visitor methods called by AST nodes
     void visit(Program &node);
     void visit(ClassDecl &node);
     void visit(FuncDecl &node);
@@ -87,44 +75,24 @@ public:
     void visit(NewExpr &node);
 
 private:
-    // LLVM infrastructure
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;
 
-    // The last computed value from an expression visitor
-    llvm::Value *lastValue;
-
-    // Maps SiSyL class names to their LLVM struct types
     std::unordered_map<std::string, llvm::StructType *> classTypes;
-
-    // Maps variable names to their LLVM alloca instructions (within current function)
     std::unordered_map<std::string, llvm::AllocaInst *> namedValues;
-
-    // Maps variable names to their SiSyL types (for field access)
     std::unordered_map<std::string, Type> variableTypes;
-
-    // Maps function names to their LLVM Function objects
     std::unordered_map<std::string, llvm::Function *> functions;
+    std::unordered_map<std::string, std::vector<std::pair<Type, std::string>>> classFields;
 
-    // Current function being generated
+    llvm::Value *lastValue;
     llvm::Function *currentFunction;
 
-    // Helper: convert SiSyL type to LLVM type
     llvm::Type *getLLVMType(const Type &type);
 
-    // Helper: create an alloca instruction in the entry block of the function
-    llvm::AllocaInst *createEntryBlockAlloca(llvm::Function *func,
-                                              const std::string &varName,
-                                              llvm::Type *type);
+    llvm::AllocaInst *createEntryBlockAlloca(llvm::Function *func, const std::string &varName, llvm::Type *type);
 
-    // Helper: get the field index in a class
     int getFieldIndex(const std::string &className, const std::string &fieldName);
-
-    // Store class field info for field access
-    std::unordered_map<std::string, std::vector<std::pair<Type, std::string>>> classFields;
 };
 
 } // namespace sisyl
-
-#endif // SISYL_CODE_GENERATOR_H

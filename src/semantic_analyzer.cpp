@@ -16,44 +16,43 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * semantic_analyzer.cpp
- *
- * Implements the semantic analysis pass for the SiSyL compiler.  This
- * file contains definitions for SymbolTable methods and SemanticAnalyzer
- * visit functions.  The current implementation performs only basic checks
- * sufficient for the MVP skeleton: it builds symbol tables, detects
- * undeclared variables and collects type information.  More advanced
- * ownership checking and type inference could be added later.
- */
-
 #include "semantic_analyzer.h"
+
+#include <ranges>
 
 using namespace sisyl;
 
-///////////////////////////////////////////////////////////////////////////////
-// SymbolTable implementation
-///////////////////////////////////////////////////////////////////////////////
+namespace {
+
+/**
+ * Check if an expression is a simple variable reference and return its name.
+ * Returns empty string if not a simple variable reference.
+ */
+std::string getVarNameFromExpr(const Expression *expr) {
+    if (auto *varRef = dynamic_cast<const VarRef *>(expr)) {
+        return varRef->name;
+    }
+    return "";
+}
+
+} // namespace
 
 bool SymbolTable::insert(const std::string &name, const Type &type, bool owned) {
     if (scopes.empty()) {
-        // Initialize global scope if not yet created
-        scopes.emplace_back();
+        pushScope();
     }
     auto &current = scopes.back();
-    if (current.find(name) != current.end()) {
-        return false; // duplicate
+    if (current.contains(name)) {
+        return false;
     }
-    current[name] = Symbol{name, type, owned, false}; // isMoved starts as false
+    current[name] = Symbol{.name = name, .type = type, .isOwned = owned, .isMoved = false};
     return true;
 }
 
 Symbol *SymbolTable::lookup(const std::string &name) {
-    for (auto it = scopes.rbegin(); it != scopes.rend(); ++it) {
-        auto found = it->find(name);
-        if (found != it->end()) {
-            return &found->second;
+    for (auto &scope : std::views::reverse(scopes)) {
+        if (scope.contains(name)) {
+            return &scope[name];
         }
     }
     return nullptr;
@@ -81,17 +80,12 @@ bool SymbolTable::isMoved(const std::string &name) {
     return sym && sym->isMoved;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// SemanticAnalyzer implementation
-///////////////////////////////////////////////////////////////////////////////
-
 SemanticAnalyzer::SemanticAnalyzer() {
     currentFunctionReturnType = Primitive::Void;
 }
 
 std::expected<void, Diagnostics> SemanticAnalyzer::analyze(const std::shared_ptr<Program> &program) {
     diagnostics.clear();
-    // Collect class and function declarations first
     program->accept(*this);
     if (!diagnostics.empty()) {
         return std::unexpected(diagnostics);
@@ -103,60 +97,46 @@ void SemanticAnalyzer::error(const std::string &msg) {
     diagnostics.push_back(msg);
 }
 
-std::string SemanticAnalyzer::getVarNameFromExpr(const Expression *expr) const {
-    if (auto *varRef = dynamic_cast<const VarRef *>(expr)) {
-        return varRef->name;
-    }
-    return "";
-}
-
 void SemanticAnalyzer::transferOwnership(const std::string &varName) {
-    if (varName.empty()) return;
+    if (varName.empty()) {
+        return;
+    }
     Symbol *sym = symTab.lookup(varName);
     if (sym && !isPrimitive(sym->type)) {
         symTab.markMoved(varName);
     }
 }
 
-// Program: process classes then functions
 void SemanticAnalyzer::visit(Program &node) {
-    // First collect class definitions
-    for (auto &cd : node.classes) {
-        cd->accept(*this);
+    for (auto &clazz : node.classes) {
+        clazz->accept(*this);
     }
-    // Then collect function signatures
-    for (auto &fd : node.functions) {
-        std::vector<Type> paramTypes;
-        paramTypes.reserve(fd->params.size());
-        for (auto &p : fd->params) {
-            paramTypes.push_back(p.type);
-        }
-
-        if (!funcSigs.try_emplace(fd->name, std::make_pair(fd->returnType, std::move(paramTypes))).second) {
-            error("Duplicate function declaration: " + fd->name);
+    for (auto &func : node.functions) {
+        std::vector<Type> paramTypes = func->params 
+            | std::views::transform([](const auto& param) { return param.type; }) 
+            | std::ranges::to<std::vector<Type>>();
+        if (!funcSigs.try_emplace(func->name, std::make_pair(func->returnType, std::move(paramTypes))).second) {
+            error("Duplicate function declaration: " + func->name);
         }
     }
-    // Now analyze each function body
-    for (auto &fd : node.functions) {
-        fd->accept(*this);
+    for (auto &func : node.functions) {
+        func->accept(*this);
     }
 }
 
-// Class declaration: record fields
 void SemanticAnalyzer::visit(ClassDecl &node) {
     if (!classDefs.try_emplace(node.name, node.fields).second) {
         error("Duplicate class declaration: " + node.name);
     }
 }
 
-// Function declaration: push a new scope, insert parameters then analyze body
 void SemanticAnalyzer::visit(FuncDecl &node) {
     symTab.pushScope();
     // Track current function's return type for validating return statements
     Type previousReturnType = currentFunctionReturnType;
     currentFunctionReturnType = node.returnType;
-    // Insert parameters into the symbol table.  Primitive types are copied,
-    // non‑primitives are owned by the function.  The function body must move
+    // Insert parameters into the symbol table. Primitive types are copied,
+    // non‑primitives are owned by the function. The function body must move
     // them when passed to another function or returned.
     for (const auto &param : node.params) {
         bool owned = !isPrimitive(param.type);
@@ -164,7 +144,6 @@ void SemanticAnalyzer::visit(FuncDecl &node) {
             error("Duplicate parameter name: " + param.name);
         }
     }
-    // Analyse function body
     if (node.body) {
         node.body->accept(*this);
     }
@@ -172,7 +151,6 @@ void SemanticAnalyzer::visit(FuncDecl &node) {
     currentFunctionReturnType = previousReturnType;
 }
 
-// Block: push scope, visit statements, pop scope
 void SemanticAnalyzer::visit(BlockStmt &node) {
     symTab.pushScope();
     for (auto &stmt : node.statements) {
@@ -181,16 +159,14 @@ void SemanticAnalyzer::visit(BlockStmt &node) {
     symTab.popScope();
 }
 
-// Variable declaration: insert variable and analyse initialiser if present
 void SemanticAnalyzer::visit(VarDeclStmt &node) {
-    // Disallow variables of type Void
     if (isVoid(node.typeName)) {
         error("Variable '" + node.name + "' cannot have type Void");
     }
 
     // Check that the declared class type exists (primitives always exist)
     if (const auto *structName = std::get_if<std::string>(&node.typeName)) {
-        if (classDefs.find(*structName) == classDefs.end()) {
+        if (!classDefs.contains(*structName)) {
             error("Unknown type in variable declaration: " + *structName);
         }
     }
@@ -215,7 +191,7 @@ void SemanticAnalyzer::visit(VarDeclStmt &node) {
     }
 }
 
-// Assignment: analyse both sides and ensure the destination is declared
+// Analyse both sides and ensure the destination is declared
 void SemanticAnalyzer::visit(AssignStmt &node) {
     // For the location (LHS), we need special handling: if it's a simple variable
     // that was moved, we should NOT report use-after-move since we're reassigning it.
@@ -264,7 +240,6 @@ void SemanticAnalyzer::visit(AssignStmt &node) {
     }
 }
 
-// If statement: analyse condition and both branches
 void SemanticAnalyzer::visit(IfStmt &node) {
     if (node.condition) {
         node.condition->accept(*this);
@@ -277,7 +252,6 @@ void SemanticAnalyzer::visit(IfStmt &node) {
     }
 }
 
-// While statement: analyse condition and body
 void SemanticAnalyzer::visit(WhileStmt &node) {
     if (node.condition) {
         node.condition->accept(*this);
@@ -287,12 +261,10 @@ void SemanticAnalyzer::visit(WhileStmt &node) {
     }
 }
 
-// Return statement: analyse returned expression if present
 void SemanticAnalyzer::visit(ReturnStmt &node) {
     if (node.expr) {
         node.expr->accept(*this);
-        
-        // Check for returning value from void function
+
         if (isVoid(currentFunctionReturnType)) {
             error("Cannot return a value from void function");
             return;
@@ -309,20 +281,17 @@ void SemanticAnalyzer::visit(ReturnStmt &node) {
             transferOwnership(sourceVar);
         }
     } else if (!isVoid(currentFunctionReturnType)) {
-        // Missing return expression for non-void function
         error("Missing return value for non-void function returning " + toString(currentFunctionReturnType));
     }
     // Note: bare "return;" in a void function is valid - no error needed
 }
 
-// Expression statement: analyse expression
 void SemanticAnalyzer::visit(ExprStmt &node) {
     if (node.expr) {
         node.expr->accept(*this);
     }
 }
 
-// Literals: set type
 void SemanticAnalyzer::visit(IntLiteral &node) {
     node.type = Primitive::Int64;
 }
@@ -333,7 +302,6 @@ void SemanticAnalyzer::visit(StringLiteral &node) {
     node.type = Primitive::Str;
 }
 
-// Variable reference: look up symbol and set type
 void SemanticAnalyzer::visit(VarRef &node) {
     Symbol *sym = symTab.lookup(node.name);
     if (!sym) {
@@ -350,7 +318,6 @@ void SemanticAnalyzer::visit(VarRef &node) {
     }
 }
 
-// Field access: lookup base variable then check class definitions
 void SemanticAnalyzer::visit(FieldAccess &node) {
     if (node.path.empty()) {
         error("Empty field access");
@@ -409,12 +376,11 @@ void SemanticAnalyzer::visit(FieldAccess &node) {
     }
 }
 
-// Unary op: analyse operand and set type based on operator
 void SemanticAnalyzer::visit(UnaryOp &node) {
     if (node.operand) {
         node.operand->accept(*this);
     }
-    // For a simple MVP we handle logical not and negation only for boolean and
+    // For now we handle logical not and negation only for boolean and
     // integer types respectively.
     if (node.op == "!") {
         if (!node.operand || !node.operand->type || !isBool(*node.operand->type)) {
@@ -432,7 +398,6 @@ void SemanticAnalyzer::visit(UnaryOp &node) {
     }
 }
 
-// Binary op: analyse operands and set result type if valid
 void SemanticAnalyzer::visit(BinaryOp &node) {
     if (node.left) {
         node.left->accept(*this);
@@ -469,9 +434,7 @@ void SemanticAnalyzer::visit(BinaryOp &node) {
     }
 }
 
-// Function call: analyse arguments and set return type
 void SemanticAnalyzer::visit(FuncCall &node) {
-    // Look up function signature
     auto it = funcSigs.find(node.callee);
     if (it == funcSigs.end()) {
         error("Call to undeclared function: " + node.callee);
@@ -504,7 +467,6 @@ void SemanticAnalyzer::visit(FuncCall &node) {
     node.type = retType;
 }
 
-// Object allocation: check that type is a known class
 void SemanticAnalyzer::visit(NewExpr &node) {
     if (classDefs.find(node.typeName) == classDefs.end()) {
         error("Allocation of unknown class type: " + node.typeName);

@@ -17,15 +17,6 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-/*
- * semantic_tests.cpp
- *
- * Unit tests for the semantic analysis phase of the SiSyL compiler.
- *
- * These tests build ASTs directly (no parser required) and validate
- * std::expected-based diagnostics from SemanticAnalyzer.
- */
-
 #include <gtest/gtest.h>
 
 #include "semantic_analyzer.h"
@@ -263,4 +254,3 @@ TEST(TypeCheck, WrongLiteralType) {
     EXPECT_FALSE(result);
     ASSERT_GE(result.error().size(), 1u);
 }
-

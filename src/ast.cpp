@@ -16,27 +16,14 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * ast.cpp
- *
- * Contains definitions of accept() methods for each AST node class.  The
- * methods simply dispatch to the appropriate visit() function on the
- * SemanticAnalyzer or CodeGenerator visitor.  Keeping this dispatch logic
- * separate from the node definitions keeps the header cleaner and allows
- * adding new visitors without modifying node classes.
- */
-
 #include "ast.h"
 #include "semantic_analyzer.h"
 #include "code_generator.h"
 
 using namespace sisyl;
 
-// Helper macro to implement accept for both visitors
-#define DEFINE_ACCEPT(NODE_CLASS)                                       \
-    void NODE_CLASS::accept(SemanticAnalyzer &visitor) { visitor.visit(*this); } \
-    void NODE_CLASS::accept(CodeGenerator &visitor) { visitor.visit(*this); }
+#define DEFINE_ACCEPT(NODE_CLASS) void NODE_CLASS::accept(SemanticAnalyzer &visitor) { visitor.visit(*this); } \
+                                  void NODE_CLASS::accept(CodeGenerator    &visitor) { visitor.visit(*this); }
 
 // Expressions
 DEFINE_ACCEPT(IntLiteral)

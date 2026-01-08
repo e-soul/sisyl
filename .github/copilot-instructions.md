@@ -26,11 +26,10 @@
 ## Golden-path build / test / run (Windows PowerShell)
 
 ### Clean configure (recommended)
-Always configure out-of-tree to a fresh directory, e.g. `build/`.
 
 ```powershell
-Remove-Item -Recurse -Force build -ErrorAction SilentlyContinue
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+Remove-Item -Recurse -Force build-clangcl -ErrorAction SilentlyContinue
+cmake --preset ninja-clangcl-release
 ```
 Notes:
 - First configure will download dependencies (ANTLR runtime + GoogleTest + ANTLR tool JAR).
@@ -38,12 +37,14 @@ Notes:
 
 ### Build
 ```powershell
-cmake --build build --config Release
+cmake --build --preset ninja-clangcl-release > build-out.txt
 ```
+Notes:
+- Build output is redirected to `build-out.txt` for easier analysis, as the output can be very lengthy. It is recommended to use tools to search the file for errors, such as `Select-String -Path build-out.txt -Pattern "error"`.
 
 ### Test
 ```powershell
-ctest --test-dir build -C Release --output-on-failure
+ctest --preset ninja-clangcl-release
 ```
 
 ### Run (smoke test)
