@@ -2,19 +2,9 @@
 
 [![CI](https://github.com/e-soul/sisyl/actions/workflows/ci.yml/badge.svg)](https://github.com/e-soul/sisyl/actions/workflows/ci.yml)
 
-SiSyL (Simple Systems Language) is a minimal safe systems programming
-language designed to demonstrate that memory safety can be achieved
-without a garbage collector, reference counting or a borrow checker. It
-features a Java‑like syntax, strict single ownership move semantics and
+SiSyL (Simple Systems Language) is a minimal safe systems programming language designed to demonstrate that memory safety can be achieved
+without a garbage collector, reference counting or a borrow checker. It features a Java‑like syntax, strict single ownership move semantics and
 generates efficient native code through LLVM.
-
-## Motivation
-
-SiSyL takes a more minimalistic approach: each resource has exactly one owner,
-ownership can be moved but never duplicated and resources are automatically
-freed when their owner goes out of scope.
-By enforcing these rules at compile time the language
-prevents use‑after‑free, double free and leaks without a runtime collector.
 
 ### Grammar
 
@@ -32,22 +22,11 @@ The language syntax is defined using ANTLR4. SiSyL supports:
 
 SiSyL's compiler follows a traditional pipeline:
 
-1. **Parsing (front‑end)** – Source text is parsed with ANTLR4 into a parse tree
-   and then converted into an AST. This AST is the "compiler's view" of the
-   program: it encodes structure (functions, blocks, statements, expressions)
-   without depending on parser details.
+1. **Parsing (front‑end)** – Source text is parsed with ANTLR4 into a parse tree and then converted into an AST.
 
-2. **Semantic analysis (middle‑end)** – The compiler checks meaning, not just
-   syntax, including:
-   name resolution (what each identifier refers to),
-   type checking (whether operators and assignments make sense),
-   and enforcing SiSyL's single‑ownership "move" model for non‑primitive values.
-   Errors are reported as human‑readable diagnostics.
+2. **Semantic analysis (middle‑end)** – The compiler checks meaning, names, types, enforces the single‑ownership "move" model.
 
-3. **Code generation (back‑end)** – The compiler lowers the validated AST into
-   LLVM IR. This step turns structured control flow, expressions, and data
-   definitions into an LLVM module that can be printed as text and then fed
-   to LLVM/Clang tooling to produce native code.
+3. **Code generation (back‑end)** – The compiler lowers the validated AST into LLVM IR.
 
 ## Building
 
@@ -77,8 +56,7 @@ This will produce the `sisylc` compiler executable.
 
 ## Usage
 
-The `sisylc` compiler currently emits LLVM IR (text). To produce a native
-executable, compile that IR with a tool like `clang`.
+The `sisylc` compiler currently emits LLVM IR (text). To produce a native executable, compile that IR with a tool like `clang`.
 
 ### Compile a `.sisyl` file to an executable on Windows.
 
