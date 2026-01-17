@@ -53,6 +53,11 @@ ctest --preset ninja-clangcl-release
 .\build\Release\sisylc.exe --emit-ir .\tests\test_program.sisyl
 ```
 
+### Format code
+```powershell
+git ls-files '*.h' '*.cpp' | ForEach-Object { clang-format -i $_ }
+```
+
 ## If builds fail (common pitfalls)
 - **No Java / Java not found**: CMake configure fails because ANTLR codegen requires Java.
   - Fix by installing Java and re-running configure.
@@ -87,8 +92,8 @@ ctest --preset ninja-clangcl-release
   - [tests/codegen_tests.cpp](../tests/codegen_tests.cpp)
   - [tests/test_program.sisyl](../tests/test_program.sisyl) (sample input)
 
-## Repo conventions (to avoid rejected PRs)
-- Prefer minimal, focused changes; avoid reformatting (no repo-wide formatter config is present).
+## Repo conventions
+- Prefer minimal, focused changes.
 - After changing grammar or AST shape, always run:
   - configure (if needed) → build → `ctest`.
 - Trust this file's commands first; only search the repo if these instructions are incomplete or become outdated.
