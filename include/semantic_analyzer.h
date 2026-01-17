@@ -22,8 +22,8 @@
 #include "type.h"
 
 #include <expected>
-#include <unordered_map>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace sisyl {
@@ -46,7 +46,7 @@ struct Symbol {
  * Representing a lexical scope. Scopes form a stack.
  */
 class SymbolTable {
-public:
+  public:
     /**
      * Add a symbol. Returns false if the name already exists in the current
      * scope; true otherwise. Ownership defaults to true for non‑primitive
@@ -66,7 +66,8 @@ public:
 
     void pushScope();
     void popScope();
-private:
+
+  private:
     std::vector<std::unordered_map<std::string, Symbol>> scopes;
 };
 
@@ -78,7 +79,7 @@ private:
  * if the compilation should proceed.
  */
 class SemanticAnalyzer {
-public:
+  public:
     SemanticAnalyzer();
 
     /**
@@ -106,7 +107,7 @@ public:
     void visit(FuncCall &node);
     void visit(NewExpr &node);
 
-private:
+  private:
     SymbolTable symTab;
 
     Type currentFunctionReturnType = Primitive::Void;

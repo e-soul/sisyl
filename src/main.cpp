@@ -16,27 +16,13 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-/*
- * main.cpp
- *
- * Entry point for the SiSyL compiler.  This driver wires together parsing,
- * semantic analysis and code generation.  It accepts a source file and
- * optional flags for controlling output.
- *
- * Usage: sisylc [options] <source_file>
- *   -o <file>    Output IR to specified file (default: stdout)
- *   --emit-ir    Output LLVM IR (text format)
- *   -h, --help   Show usage information
- */
-
+#include "code_generator.h"
 #include "parser_driver.h"
 #include "semantic_analyzer.h"
-#include "code_generator.h"
-#include <iostream>
-#include <filesystem>
-#include <string>
 #include <cstring>
+#include <filesystem>
+#include <iostream>
+#include <string>
 
 using namespace sisyl;
 
@@ -79,7 +65,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    
+
     ParserDriver parser;
     std::expected<std::shared_ptr<Program>, std::vector<std::string>> programResult;
 
@@ -136,6 +122,6 @@ int main(int argc, char **argv) {
     } else {
         std::cout << "Compilation finished successfully." << std::endl;
     }
-    
+
     return 0;
 }

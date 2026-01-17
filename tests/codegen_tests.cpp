@@ -16,26 +16,18 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
-#include <gtest/gtest.h>
 #include "code_generator.h"
+#include <gtest/gtest.h>
 
 #include <string_view>
 
 using namespace sisyl;
 
-static Type T(std::string_view s) {
-    return parseType(s);
-}
+static Type T(std::string_view s) { return parseType(s); }
 
-static Type S(std::string_view s) {
-    return Type{std::string{s}};
-}
+static Type S(std::string_view s) { return Type{std::string{s}}; }
 
-static std::shared_ptr<FuncDecl> makeFunc(Type retType,
-                                          std::string name,
-                                          std::vector<Parameter> params,
-                                          std::shared_ptr<BlockStmt> body) {
+static std::shared_ptr<FuncDecl> makeFunc(Type retType, std::string name, std::vector<Parameter> params, std::shared_ptr<BlockStmt> body) {
     return std::make_shared<FuncDecl>(std::move(retType), std::move(name), std::move(params), std::move(body));
 }
 
@@ -66,10 +58,7 @@ TEST(CodeGen, SimpleInt64Return) {
 
 TEST(CodeGen, FunctionWithParams) {
     auto block = std::make_shared<BlockStmt>();
-    auto addExpr = std::make_shared<BinaryOp>(
-        std::make_shared<VarRef>("a"),
-        "+",
-        std::make_shared<VarRef>("b"));
+    auto addExpr = std::make_shared<BinaryOp>(std::make_shared<VarRef>("a"), "+", std::make_shared<VarRef>("b"));
     block->statements.push_back(std::make_shared<ReturnStmt>(addExpr));
 
     std::vector<Parameter> params = {{T("Int64"), "a"}, {T("Int64"), "b"}};
@@ -134,12 +123,10 @@ TEST(CodeGen, WhileLoop) {
 
     auto loopBody = std::make_shared<BlockStmt>();
     loopBody->statements.push_back(std::make_shared<AssignStmt>(
-        std::make_shared<VarRef>("i"),
-        std::make_shared<BinaryOp>(std::make_shared<VarRef>("i"), "+", std::make_shared<IntLiteral>(1))));
+        std::make_shared<VarRef>("i"), std::make_shared<BinaryOp>(std::make_shared<VarRef>("i"), "+", std::make_shared<IntLiteral>(1))));
 
-    body->statements.push_back(std::make_shared<WhileStmt>(
-        std::make_shared<BinaryOp>(std::make_shared<VarRef>("i"), "<", std::make_shared<IntLiteral>(10)),
-        loopBody));
+    body->statements.push_back(
+        std::make_shared<WhileStmt>(std::make_shared<BinaryOp>(std::make_shared<VarRef>("i"), "<", std::make_shared<IntLiteral>(10)), loopBody));
     body->statements.push_back(std::make_shared<ReturnStmt>(std::make_shared<VarRef>("i")));
 
     auto func = makeFunc(T("Int64"), "testWhile", {}, body);
@@ -158,9 +145,7 @@ TEST(CodeGen, WhileLoop) {
 
 TEST(CodeGen, StructTypeAndNewUsesMalloc) {
     auto prog = std::make_shared<Program>();
-    prog->classes.push_back(std::make_shared<ClassDecl>(
-        "Point",
-        std::vector<std::pair<Type, std::string>>{{T("Int64"), "x"}, {T("Int64"), "y"}}));
+    prog->classes.push_back(std::make_shared<ClassDecl>("Point", std::vector<std::pair<Type, std::string>>{{T("Int64"), "x"}, {T("Int64"), "y"}}));
 
     auto body = std::make_shared<BlockStmt>();
     body->statements.push_back(std::make_shared<VarDeclStmt>(S("Point"), "p", std::make_shared<NewExpr>("Point")));
@@ -185,12 +170,9 @@ TEST(CodeGen, BinaryOperations) {
     block->statements.push_back(std::make_shared<VarDeclStmt>(T("Int64"), "d", std::make_shared<IntLiteral>(4)));
 
     auto expr = std::make_shared<BinaryOp>(
-        std::make_shared<BinaryOp>(
-            std::make_shared<BinaryOp>(std::make_shared<VarRef>("a"), "+", std::make_shared<VarRef>("b")),
-            "*",
-            std::make_shared<BinaryOp>(std::make_shared<VarRef>("c"), "-", std::make_shared<VarRef>("d"))),
-        "/",
-        std::make_shared<VarRef>("a"));
+        std::make_shared<BinaryOp>(std::make_shared<BinaryOp>(std::make_shared<VarRef>("a"), "+", std::make_shared<VarRef>("b")), "*",
+                                   std::make_shared<BinaryOp>(std::make_shared<VarRef>("c"), "-", std::make_shared<VarRef>("d"))),
+        "/", std::make_shared<VarRef>("a"));
     block->statements.push_back(std::make_shared<ReturnStmt>(expr));
 
     auto prog = std::make_shared<Program>();
@@ -230,8 +212,7 @@ TEST(CodeGen, ComparisonOperations) {
 TEST(CodeGen, UnaryOperations) {
     auto block = std::make_shared<BlockStmt>();
     block->statements.push_back(std::make_shared<VarDeclStmt>(T("Int64"), "x", std::make_shared<IntLiteral>(42)));
-    block->statements.push_back(std::make_shared<ReturnStmt>(
-        std::make_shared<UnaryOp>("-", std::make_shared<VarRef>("x"))));
+    block->statements.push_back(std::make_shared<ReturnStmt>(std::make_shared<UnaryOp>("-", std::make_shared<VarRef>("x"))));
 
     auto prog = std::make_shared<Program>();
     prog->functions.push_back(makeFunc(T("Int64"), "testNeg", {}, block));
@@ -241,9 +222,7 @@ TEST(CodeGen, UnaryOperations) {
     ASSERT_TRUE(irResult);
 
     const std::string &ir = *irResult;
-    const bool hasNegViaSub =
-        (ir.find("sub i64 0") != std::string::npos) ||
-        (ir.find("sub nsw i64 0") != std::string::npos);
+    const bool hasNegViaSub = (ir.find("sub i64 0") != std::string::npos) || (ir.find("sub nsw i64 0") != std::string::npos);
     EXPECT_TRUE(hasNegViaSub);
 }
 
@@ -251,13 +230,13 @@ TEST(CodeGen, FunctionCalls) {
     auto prog = std::make_shared<Program>();
 
     auto helperBlock = std::make_shared<BlockStmt>();
-    helperBlock->statements.push_back(std::make_shared<ReturnStmt>(
-        std::make_shared<BinaryOp>(std::make_shared<VarRef>("x"), "*", std::make_shared<IntLiteral>(2))));
+    helperBlock->statements.push_back(
+        std::make_shared<ReturnStmt>(std::make_shared<BinaryOp>(std::make_shared<VarRef>("x"), "*", std::make_shared<IntLiteral>(2))));
     prog->functions.push_back(makeFunc(T("Int64"), "helper", {{T("Int64"), "x"}}, helperBlock));
 
     auto mainBlock = std::make_shared<BlockStmt>();
-    mainBlock->statements.push_back(std::make_shared<ReturnStmt>(
-        std::make_shared<FuncCall>("helper", std::vector<std::shared_ptr<Expression>>{std::make_shared<IntLiteral>(21)})));
+    mainBlock->statements.push_back(
+        std::make_shared<ReturnStmt>(std::make_shared<FuncCall>("helper", std::vector<std::shared_ptr<Expression>>{std::make_shared<IntLiteral>(21)})));
     prog->functions.push_back(makeFunc(T("Int64"), "main", {}, mainBlock));
 
     CodeGenerator codegen;
@@ -287,9 +266,7 @@ TEST(CodeGen, VoidFunction) {
 
 TEST(CodeGen, NewExpressionUsesMalloc) {
     auto prog = std::make_shared<Program>();
-    prog->classes.push_back(std::make_shared<ClassDecl>(
-        "Node",
-        std::vector<std::pair<Type, std::string>>{{T("Int64"), "value"}}));
+    prog->classes.push_back(std::make_shared<ClassDecl>("Node", std::vector<std::pair<Type, std::string>>{{T("Int64"), "value"}}));
 
     auto block = std::make_shared<BlockStmt>();
     block->statements.push_back(std::make_shared<VarDeclStmt>(S("Node"), "n", std::make_shared<NewExpr>("Node")));
@@ -306,8 +283,7 @@ TEST(CodeGen, NewExpressionUsesMalloc) {
 
 TEST(CodeGen, StringLiteralEmitsConstant) {
     auto block = std::make_shared<BlockStmt>();
-    block->statements.push_back(
-        std::make_shared<VarDeclStmt>(T("Str"), "msg", std::make_shared<StringLiteral>("Hello, World!")));
+    block->statements.push_back(std::make_shared<VarDeclStmt>(T("Str"), "msg", std::make_shared<StringLiteral>("Hello, World!")));
     block->statements.push_back(std::make_shared<ReturnStmt>(std::make_shared<IntLiteral>(0)));
 
     auto prog = std::make_shared<Program>();

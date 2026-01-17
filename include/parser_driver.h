@@ -34,7 +34,7 @@ namespace sisyl {
  * of the compiler does not depend directly on ANTLR headers.
  */
 class ParserDriver {
-public:
+  public:
     [[nodiscard]] std::expected<std::shared_ptr<Program>, std::vector<std::string>> parseString(std::string_view source);
     [[nodiscard]] std::expected<std::shared_ptr<Program>, std::vector<std::string>> parseFile(const std::filesystem::path &path);
 };

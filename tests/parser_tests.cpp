@@ -16,7 +16,6 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #include <gtest/gtest.h>
 
 #include "parser_driver.h"
@@ -447,7 +446,7 @@ TEST(ParserIntegration, OwnershipTracking) {
         }
     )");
     ASSERT_TRUE(parseResult);
-    
+
     SemanticAnalyzer sem;
     EXPECT_TRUE(sem.analyze(*parseResult));
 }
@@ -467,7 +466,7 @@ TEST(ParserIntegration, UseAfterMoveDetected) {
         }
     )");
     ASSERT_TRUE(parseResult);
-    
+
     SemanticAnalyzer sem;
     auto semResult = sem.analyze(*parseResult);
     EXPECT_FALSE(semResult);

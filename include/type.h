@@ -33,9 +33,7 @@ enum class Primitive {
 
 using Type = std::variant<Primitive, std::string>; // string holds class name
 
-[[nodiscard]] inline constexpr bool isPrimitive(const Type &type) {
-    return std::holds_alternative<Primitive>(type);
-}
+[[nodiscard]] inline constexpr bool isPrimitive(const Type &type) { return std::holds_alternative<Primitive>(type); }
 
 [[nodiscard]] inline constexpr bool isVoid(const Type &type) {
     if (const auto *prim = std::get_if<Primitive>(&type)) {
@@ -51,9 +49,7 @@ using Type = std::variant<Primitive, std::string>; // string holds class name
     return false;
 }
 
-[[nodiscard]] inline constexpr bool isInt64(const Type &type) {
-    return isInt(type);
-}
+[[nodiscard]] inline constexpr bool isInt64(const Type &type) { return isInt(type); }
 
 [[nodiscard]] inline constexpr bool isBool(const Type &type) {
     if (const auto *prim = std::get_if<Primitive>(&type)) {

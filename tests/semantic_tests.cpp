@@ -16,7 +16,6 @@
    LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
-
 #include <gtest/gtest.h>
 
 #include "semantic_analyzer.h"
@@ -25,18 +24,11 @@
 
 using namespace sisyl;
 
-static Type T(std::string_view s) {
-    return parseType(s);
-}
+static Type T(std::string_view s) { return parseType(s); }
 
-static Type S(std::string_view s) {
-    return Type{std::string{s}};
-}
+static Type S(std::string_view s) { return Type{std::string{s}}; }
 
-static std::shared_ptr<FuncDecl> makeFunc(Type retType,
-                                          std::string name,
-                                          std::vector<Parameter> params,
-                                          std::shared_ptr<BlockStmt> body) {
+static std::shared_ptr<FuncDecl> makeFunc(Type retType, std::string name, std::vector<Parameter> params, std::shared_ptr<BlockStmt> body) {
     return std::make_shared<FuncDecl>(std::move(retType), std::move(name), std::move(params), std::move(body));
 }
 
@@ -63,8 +55,7 @@ TEST(Semantic, RedeclarationSameScope) {
 
 TEST(Ownership, UseAfterMove) {
     // class Point { Int64 x; }
-    auto pointClass = std::make_shared<ClassDecl>("Point",
-        std::vector<std::pair<Type, std::string>>{{T("Int64"), "x"}});
+    auto pointClass = std::make_shared<ClassDecl>("Point", std::vector<std::pair<Type, std::string>>{{T("Int64"), "x"}});
 
     auto block = std::make_shared<BlockStmt>();
     block->statements.push_back(std::make_shared<VarDeclStmt>(S("Point"), "a", std::make_shared<NewExpr>("Point")));
@@ -98,8 +89,7 @@ TEST(Ownership, Int64IsCopiedNotMoved) {
 }
 
 TEST(Ownership, MoveViaAssignment) {
-    auto pointClass = std::make_shared<ClassDecl>("Point",
-        std::vector<std::pair<Type, std::string>>{{T("Int64"), "x"}});
+    auto pointClass = std::make_shared<ClassDecl>("Point", std::vector<std::pair<Type, std::string>>{{T("Int64"), "x"}});
 
     auto block = std::make_shared<BlockStmt>();
     block->statements.push_back(std::make_shared<VarDeclStmt>(S("Point"), "a", std::make_shared<NewExpr>("Point")));
@@ -207,12 +197,9 @@ TEST(TypeCheck, BareReturnInNonVoidErrors) {
 
 TEST(Ownership, StrIsCopiedNotMoved) {
     auto block = std::make_shared<BlockStmt>();
-    block->statements.push_back(
-        std::make_shared<VarDeclStmt>(T("Str"), "s1", std::make_shared<StringLiteral>("hello")));
-    block->statements.push_back(
-        std::make_shared<VarDeclStmt>(T("Str"), "s2", std::make_shared<VarRef>("s1")));
-    block->statements.push_back(
-        std::make_shared<VarDeclStmt>(T("Str"), "s3", std::make_shared<VarRef>("s1")));
+    block->statements.push_back(std::make_shared<VarDeclStmt>(T("Str"), "s1", std::make_shared<StringLiteral>("hello")));
+    block->statements.push_back(std::make_shared<VarDeclStmt>(T("Str"), "s2", std::make_shared<VarRef>("s1")));
+    block->statements.push_back(std::make_shared<VarDeclStmt>(T("Str"), "s3", std::make_shared<VarRef>("s1")));
 
     auto func = makeFunc(T("Void"), "test", {}, block);
     auto prog = std::make_shared<Program>();
@@ -242,8 +229,7 @@ TEST(TypeCheck, LiteralTypes) {
 
 TEST(TypeCheck, WrongLiteralType) {
     auto block = std::make_shared<BlockStmt>();
-    block->statements.push_back(
-        std::make_shared<VarDeclStmt>(T("Int64"), "a", std::make_shared<StringLiteral>("hello")));
+    block->statements.push_back(std::make_shared<VarDeclStmt>(T("Int64"), "a", std::make_shared<StringLiteral>("hello")));
 
     auto func = makeFunc(T("Void"), "test", {}, block);
     auto prog = std::make_shared<Program>();

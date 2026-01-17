@@ -20,10 +20,10 @@
 
 #include "type.h"
 
-#include <string>
-#include <vector>
 #include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace sisyl {
 
@@ -31,7 +31,7 @@ class SemanticAnalyzer;
 class CodeGenerator;
 
 class AstNode {
-public:
+  public:
     virtual ~AstNode() = default;
 
     virtual void accept(SemanticAnalyzer &visitor) = 0;
@@ -39,7 +39,7 @@ public:
 };
 
 class Expression : public AstNode {
-public:
+  public:
     // Expressions may have a deduced or declared type attached after
     // semantic analysis.
     std::optional<Type> type;
@@ -47,12 +47,12 @@ public:
 };
 
 class Statement : public AstNode {
-public:
+  public:
     virtual ~Statement() = default;
 };
 
 class IntLiteral : public Expression {
-public:
+  public:
     std::int64_t value;
     explicit IntLiteral(std::int64_t v) : value(v) {}
     void accept(SemanticAnalyzer &visitor) override;
@@ -60,7 +60,7 @@ public:
 };
 
 class BoolLiteral : public Expression {
-public:
+  public:
     bool value;
     explicit BoolLiteral(bool v) : value(v) {}
     void accept(SemanticAnalyzer &visitor) override;
@@ -68,7 +68,7 @@ public:
 };
 
 class StringLiteral : public Expression {
-public:
+  public:
     std::string value;
     explicit StringLiteral(std::string v) : value(std::move(v)) {}
     void accept(SemanticAnalyzer &visitor) override;
@@ -76,7 +76,7 @@ public:
 };
 
 class VarRef : public Expression {
-public:
+  public:
     std::string name;
     explicit VarRef(std::string n) : name(std::move(n)) {}
     void accept(SemanticAnalyzer &visitor) override;
@@ -84,7 +84,7 @@ public:
 };
 
 class FieldAccess : public Expression {
-public:
+  public:
     std::vector<std::string> path;
     explicit FieldAccess(std::vector<std::string> p) : path(std::move(p)) {}
     void accept(SemanticAnalyzer &visitor) override;
@@ -92,38 +92,35 @@ public:
 };
 
 class UnaryOp : public Expression {
-public:
+  public:
     std::string op;
     std::shared_ptr<Expression> operand;
-    UnaryOp(std::string op, std::shared_ptr<Expression> operand)
-        : op(std::move(op)), operand(std::move(operand)) {}
+    UnaryOp(std::string op, std::shared_ptr<Expression> operand) : op(std::move(op)), operand(std::move(operand)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class BinaryOp : public Expression {
-public:
+  public:
     std::string op;
     std::shared_ptr<Expression> left;
     std::shared_ptr<Expression> right;
-    BinaryOp(std::shared_ptr<Expression> l, std::string op, std::shared_ptr<Expression> r)
-        : op(std::move(op)), left(std::move(l)), right(std::move(r)) {}
+    BinaryOp(std::shared_ptr<Expression> l, std::string op, std::shared_ptr<Expression> r) : op(std::move(op)), left(std::move(l)), right(std::move(r)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class FuncCall : public Expression {
-public:
+  public:
     std::string callee;
     std::vector<std::shared_ptr<Expression>> args;
-    FuncCall(std::string c, std::vector<std::shared_ptr<Expression>> a)
-        : callee(std::move(c)), args(std::move(a)) {}
+    FuncCall(std::string c, std::vector<std::shared_ptr<Expression>> a) : callee(std::move(c)), args(std::move(a)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class NewExpr : public Expression {
-public:
+  public:
     std::string typeName;
     explicit NewExpr(std::string t) : typeName(std::move(t)) {}
     void accept(SemanticAnalyzer &visitor) override;
@@ -133,10 +130,9 @@ public:
 // A block of statements introduces a new scope.  It owns a list of
 // statements executed sequentially.
 class BlockStmt : public Statement {
-public:
+  public:
     std::vector<std::shared_ptr<Statement>> statements;
-    explicit BlockStmt(std::vector<std::shared_ptr<Statement>> stmts = {})
-        : statements(std::move(stmts)) {}
+    explicit BlockStmt(std::vector<std::shared_ptr<Statement>> stmts = {}) : statements(std::move(stmts)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
@@ -145,61 +141,54 @@ public:
 // is initialised with that expression.  For non‑primitive types ownership
 // is transferred from the expression to the variable.
 class VarDeclStmt : public Statement {
-public:
+  public:
     Type typeName;
     std::string name;
     std::shared_ptr<Expression> initExpr;
-    VarDeclStmt(Type t, std::string n,
-                std::shared_ptr<Expression> init = nullptr)
-        : typeName(std::move(t)), name(std::move(n)), initExpr(std::move(init)) {}
+    VarDeclStmt(Type t, std::string n, std::shared_ptr<Expression> init = nullptr) : typeName(std::move(t)), name(std::move(n)), initExpr(std::move(init)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class AssignStmt : public Statement {
-public:
+  public:
     std::shared_ptr<Expression> location;
     std::shared_ptr<Expression> expr;
-    AssignStmt(std::shared_ptr<Expression> loc, std::shared_ptr<Expression> expr)
-        : location(std::move(loc)), expr(std::move(expr)) {}
+    AssignStmt(std::shared_ptr<Expression> loc, std::shared_ptr<Expression> expr) : location(std::move(loc)), expr(std::move(expr)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class IfStmt : public Statement {
-public:
+  public:
     std::shared_ptr<Expression> condition;
     std::shared_ptr<BlockStmt> thenBranch;
     std::shared_ptr<BlockStmt> elseBranch;
-    IfStmt(std::shared_ptr<Expression> cond,
-           std::shared_ptr<BlockStmt> thenBlk,
-           std::shared_ptr<BlockStmt> elseBlk = nullptr)
+    IfStmt(std::shared_ptr<Expression> cond, std::shared_ptr<BlockStmt> thenBlk, std::shared_ptr<BlockStmt> elseBlk = nullptr)
         : condition(std::move(cond)), thenBranch(std::move(thenBlk)), elseBranch(std::move(elseBlk)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class WhileStmt : public Statement {
-public:
+  public:
     std::shared_ptr<Expression> condition;
     std::shared_ptr<BlockStmt> body;
-    WhileStmt(std::shared_ptr<Expression> cond, std::shared_ptr<BlockStmt> body)
-        : condition(std::move(cond)), body(std::move(body)) {}
+    WhileStmt(std::shared_ptr<Expression> cond, std::shared_ptr<BlockStmt> body) : condition(std::move(cond)), body(std::move(body)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class ReturnStmt : public Statement {
-public:
+  public:
     std::shared_ptr<Expression> expr;
-    explicit ReturnStmt(std::shared_ptr<Expression> e = nullptr)
-        : expr(std::move(e)) {}
+    explicit ReturnStmt(std::shared_ptr<Expression> e = nullptr) : expr(std::move(e)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class ExprStmt : public Statement {
-public:
+  public:
     std::shared_ptr<Expression> expr;
     explicit ExprStmt(std::shared_ptr<Expression> e) : expr(std::move(e)) {}
     void accept(SemanticAnalyzer &visitor) override;
@@ -207,11 +196,10 @@ public:
 };
 
 class ClassDecl : public AstNode {
-public:
+  public:
     std::string name;
     std::vector<std::pair<Type, std::string>> fields;
-    ClassDecl(std::string n, std::vector<std::pair<Type, std::string>> f)
-        : name(std::move(n)), fields(std::move(f)) {}
+    ClassDecl(std::string n, std::vector<std::pair<Type, std::string>> f) : name(std::move(n)), fields(std::move(f)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
@@ -222,22 +210,19 @@ struct Parameter {
 };
 
 class FuncDecl : public AstNode {
-public:
+  public:
     Type returnType;
     std::string name;
     std::vector<Parameter> params;
     std::shared_ptr<BlockStmt> body;
-    FuncDecl(Type retType, std::string name,
-             std::vector<Parameter> params,
-             std::shared_ptr<BlockStmt> body)
-        : returnType(std::move(retType)), name(std::move(name)),
-          params(std::move(params)), body(std::move(body)) {}
+    FuncDecl(Type retType, std::string name, std::vector<Parameter> params, std::shared_ptr<BlockStmt> body)
+        : returnType(std::move(retType)), name(std::move(name)), params(std::move(params)), body(std::move(body)) {}
     void accept(SemanticAnalyzer &visitor) override;
     void accept(CodeGenerator &visitor) override;
 };
 
 class Program : public AstNode {
-public:
+  public:
     std::vector<std::shared_ptr<ClassDecl>> classes;
     std::vector<std::shared_ptr<FuncDecl>> functions;
     void accept(SemanticAnalyzer &visitor) override;

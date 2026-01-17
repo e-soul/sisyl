@@ -58,9 +58,7 @@ Symbol *SymbolTable::lookup(const std::string &name) {
     return nullptr;
 }
 
-void SymbolTable::pushScope() {
-    scopes.emplace_back();
-}
+void SymbolTable::pushScope() { scopes.emplace_back(); }
 
 void SymbolTable::popScope() {
     if (!scopes.empty()) {
@@ -80,9 +78,7 @@ bool SymbolTable::isMoved(const std::string &name) {
     return sym && sym->isMoved;
 }
 
-SemanticAnalyzer::SemanticAnalyzer() {
-    currentFunctionReturnType = Primitive::Void;
-}
+SemanticAnalyzer::SemanticAnalyzer() { currentFunctionReturnType = Primitive::Void; }
 
 std::expected<void, Diagnostics> SemanticAnalyzer::analyze(const std::shared_ptr<Program> &program) {
     diagnostics.clear();
@@ -93,9 +89,7 @@ std::expected<void, Diagnostics> SemanticAnalyzer::analyze(const std::shared_ptr
     return {};
 }
 
-void SemanticAnalyzer::error(const std::string &msg) {
-    diagnostics.push_back(msg);
-}
+void SemanticAnalyzer::error(const std::string &msg) { diagnostics.push_back(msg); }
 
 void SemanticAnalyzer::transferOwnership(const std::string &varName) {
     if (varName.empty()) {
@@ -112,9 +106,8 @@ void SemanticAnalyzer::visit(Program &node) {
         clazz->accept(*this);
     }
     for (auto &func : node.functions) {
-        std::vector<Type> paramTypes = func->params 
-            | std::views::transform([](const auto& param) { return param.type; }) 
-            | std::ranges::to<std::vector<Type>>();
+        auto paramTypeView = func->params | std::views::transform([](const auto &param) { return param.type; });
+        auto paramTypes = std::ranges::to<std::vector<Type>>(paramTypeView);
         if (!funcSigs.try_emplace(func->name, std::make_pair(func->returnType, std::move(paramTypes))).second) {
             error("Duplicate function declaration: " + func->name);
         }
@@ -179,8 +172,7 @@ void SemanticAnalyzer::visit(VarDeclStmt &node) {
         node.initExpr->accept(*this);
         // Type check: initializer type must match declared type
         if (node.initExpr->type && !isSameType(*node.initExpr->type, node.typeName)) {
-            error("Type mismatch in initialization of '" + node.name +
-                  "': expected " + toString(node.typeName) + ", got " + toString(*node.initExpr->type));
+            error("Type mismatch in initialization of '" + node.name + "': expected " + toString(node.typeName) + ", got " + toString(*node.initExpr->type));
         }
         // Handle ownership transfer: if initializing from a variable with a
         // non-primitive type, that variable is moved
@@ -213,23 +205,23 @@ void SemanticAnalyzer::visit(AssignStmt &node) {
             node.location->accept(*this);
         }
     }
-    
+
     if (node.expr) {
         node.expr->accept(*this);
     }
-    
+
     // Type check: RHS type must match LHS type
     if (node.location && node.expr) {
         if (node.location->type && node.expr->type && !isSameType(*node.location->type, *node.expr->type)) {
             error("Type mismatch in assignment: cannot assign " + toString(*node.expr->type) + " to " + toString(*node.location->type));
         }
-        
+
         // Handle ownership transfer for non-primitive types
         std::string sourceVar = getVarNameFromExpr(node.expr.get());
         if (!sourceVar.empty() && node.expr->type && !isPrimitive(*node.expr->type)) {
             transferOwnership(sourceVar);
         }
-        
+
         // If assigning to a variable that was moved, restore its validity
         if (!destVar.empty()) {
             Symbol *sym = symTab.lookup(destVar);
@@ -269,11 +261,10 @@ void SemanticAnalyzer::visit(ReturnStmt &node) {
             error("Cannot return a value from void function");
             return;
         }
-        
+
         // Validate return type matches function's declared return type
         if (node.expr->type && !isSameType(*node.expr->type, currentFunctionReturnType)) {
-            error("Return type mismatch: expected " + toString(currentFunctionReturnType) +
-                  ", got " + toString(*node.expr->type));
+            error("Return type mismatch: expected " + toString(currentFunctionReturnType) + ", got " + toString(*node.expr->type));
         }
         // Handle ownership transfer for non-primitive return values
         std::string sourceVar = getVarNameFromExpr(node.expr.get());
@@ -292,15 +283,9 @@ void SemanticAnalyzer::visit(ExprStmt &node) {
     }
 }
 
-void SemanticAnalyzer::visit(IntLiteral &node) {
-    node.type = Primitive::Int64;
-}
-void SemanticAnalyzer::visit(BoolLiteral &node) {
-    node.type = Primitive::Bool;
-}
-void SemanticAnalyzer::visit(StringLiteral &node) {
-    node.type = Primitive::Str;
-}
+void SemanticAnalyzer::visit(IntLiteral &node) { node.type = Primitive::Int64; }
+void SemanticAnalyzer::visit(BoolLiteral &node) { node.type = Primitive::Bool; }
+void SemanticAnalyzer::visit(StringLiteral &node) { node.type = Primitive::Str; }
 
 void SemanticAnalyzer::visit(VarRef &node) {
     Symbol *sym = symTab.lookup(node.name);
@@ -454,8 +439,8 @@ void SemanticAnalyzer::visit(FuncCall &node) {
             const Type &expected = paramTypes[i];
             const std::optional<Type> actual = node.args[i]->type;
             if (actual && !isSameType(*actual, expected)) {
-                error("Type mismatch for argument " + std::to_string(i) + " of function " + node.callee +
-                      ": expected " + toString(expected) + ", got " + toString(*actual));
+                error("Type mismatch for argument " + std::to_string(i) + " of function " + node.callee + ": expected " + toString(expected) + ", got " +
+                      toString(*actual));
             }
             // Transfer ownership for non-primitive arguments
             std::string argVar = getVarNameFromExpr(node.args[i].get());

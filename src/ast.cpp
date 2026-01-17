@@ -17,13 +17,14 @@
    SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include "ast.h"
-#include "semantic_analyzer.h"
 #include "code_generator.h"
+#include "semantic_analyzer.h"
 
 using namespace sisyl;
 
-#define DEFINE_ACCEPT(NODE_CLASS) void NODE_CLASS::accept(SemanticAnalyzer &visitor) { visitor.visit(*this); } \
-                                  void NODE_CLASS::accept(CodeGenerator    &visitor) { visitor.visit(*this); }
+#define DEFINE_ACCEPT(NODE_CLASS)                                                                                                                              \
+    void NODE_CLASS::accept(SemanticAnalyzer &visitor) { visitor.visit(*this); }                                                                               \
+    void NODE_CLASS::accept(CodeGenerator &visitor) { visitor.visit(*this); }
 
 // Expressions
 DEFINE_ACCEPT(IntLiteral)

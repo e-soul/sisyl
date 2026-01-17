@@ -18,8 +18,8 @@
 */
 #pragma once
 
-#include "ast.h"
 #include "SiSyLBaseVisitor.h"
+#include "ast.h"
 
 namespace sisyl {
 
@@ -28,44 +28,44 @@ namespace sisyl {
  * Each visit method returns an std::any holding a shared_ptr to an AST node.
  */
 class AstBuilder : public SiSyLBaseVisitor {
-public:
+  public:
     AstBuilder() = default;
 
-   std::any visitProgram(SiSyLParser::ProgramContext *ctx) override;
+    std::any visitProgram(SiSyLParser::ProgramContext *ctx) override;
 
-   // Class and functioun
-   std::any visitClassDecl(SiSyLParser::ClassDeclContext *ctx) override;
-   std::any visitClassFields(SiSyLParser::ClassFieldsContext *ctx) override;
-   std::any visitFuncDecl(SiSyLParser::FuncDeclContext *ctx) override;
-   std::any visitParamList(SiSyLParser::ParamListContext *ctx) override;
-   std::any visitParam(SiSyLParser::ParamContext *ctx) override;
+    // Class and functioun
+    std::any visitClassDecl(SiSyLParser::ClassDeclContext *ctx) override;
+    std::any visitClassFields(SiSyLParser::ClassFieldsContext *ctx) override;
+    std::any visitFuncDecl(SiSyLParser::FuncDeclContext *ctx) override;
+    std::any visitParamList(SiSyLParser::ParamListContext *ctx) override;
+    std::any visitParam(SiSyLParser::ParamContext *ctx) override;
 
-   // Block and statements
-   std::any visitBlock(SiSyLParser::BlockContext *ctx) override;
-   std::any visitStatement(SiSyLParser::StatementContext *ctx) override;
-   std::any visitBlockStmt(SiSyLParser::BlockStmtContext *ctx) override;
-   std::any visitVarDecl(SiSyLParser::VarDeclContext *ctx) override;
-   std::any visitAssignStmt(SiSyLParser::AssignStmtContext *ctx) override;
-   std::any visitIfStmt(SiSyLParser::IfStmtContext *ctx) override;
-   std::any visitWhileStmt(SiSyLParser::WhileStmtContext *ctx) override;
-   std::any visitReturnStmt(SiSyLParser::ReturnStmtContext *ctx) override;
-   std::any visitExprStmt(SiSyLParser::ExprStmtContext *ctx) override;
+    // Block and statements
+    std::any visitBlock(SiSyLParser::BlockContext *ctx) override;
+    std::any visitStatement(SiSyLParser::StatementContext *ctx) override;
+    std::any visitBlockStmt(SiSyLParser::BlockStmtContext *ctx) override;
+    std::any visitVarDecl(SiSyLParser::VarDeclContext *ctx) override;
+    std::any visitAssignStmt(SiSyLParser::AssignStmtContext *ctx) override;
+    std::any visitIfStmt(SiSyLParser::IfStmtContext *ctx) override;
+    std::any visitWhileStmt(SiSyLParser::WhileStmtContext *ctx) override;
+    std::any visitReturnStmt(SiSyLParser::ReturnStmtContext *ctx) override;
+    std::any visitExprStmt(SiSyLParser::ExprStmtContext *ctx) override;
 
-   // Expressions
-   std::any visitExpression(SiSyLParser::ExpressionContext *ctx) override;
-   std::any visitLogicalOrExpr(SiSyLParser::LogicalOrExprContext *ctx) override;
-   std::any visitLogicalAndExpr(SiSyLParser::LogicalAndExprContext *ctx) override;
-   std::any visitEqualityExpr(SiSyLParser::EqualityExprContext *ctx) override;
-   std::any visitRelationalExpr(SiSyLParser::RelationalExprContext *ctx) override;
-   std::any visitAddExpr(SiSyLParser::AddExprContext *ctx) override;
-   std::any visitMulExpr(SiSyLParser::MulExprContext *ctx) override;
-   std::any visitUnaryExpr(SiSyLParser::UnaryExprContext *ctx) override;
-   std::any visitPrimary(SiSyLParser::PrimaryContext *ctx) override;
+    // Expressions
+    std::any visitExpression(SiSyLParser::ExpressionContext *ctx) override;
+    std::any visitLogicalOrExpr(SiSyLParser::LogicalOrExprContext *ctx) override;
+    std::any visitLogicalAndExpr(SiSyLParser::LogicalAndExprContext *ctx) override;
+    std::any visitEqualityExpr(SiSyLParser::EqualityExprContext *ctx) override;
+    std::any visitRelationalExpr(SiSyLParser::RelationalExprContext *ctx) override;
+    std::any visitAddExpr(SiSyLParser::AddExprContext *ctx) override;
+    std::any visitMulExpr(SiSyLParser::MulExprContext *ctx) override;
+    std::any visitUnaryExpr(SiSyLParser::UnaryExprContext *ctx) override;
+    std::any visitPrimary(SiSyLParser::PrimaryContext *ctx) override;
 
-   // Location and type
-   std::any visitLocation(SiSyLParser::LocationContext *ctx) override;
-   std::any visitType(SiSyLParser::TypeContext *ctx) override;
-   std::any visitArgList(SiSyLParser::ArgListContext *ctx) override;
+    // Location and type
+    std::any visitLocation(SiSyLParser::LocationContext *ctx) override;
+    std::any visitType(SiSyLParser::TypeContext *ctx) override;
+    std::any visitArgList(SiSyLParser::ArgListContext *ctx) override;
 };
 
 } // namespace sisyl

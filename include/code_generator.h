@@ -22,17 +22,17 @@
 
 #include <expected>
 #include <filesystem>
+#include <memory>
 #include <string>
 #include <unordered_map>
-#include <memory>
 #include <vector>
 
+#include <llvm/IR/Function.h>
+#include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/IR/Module.h>
-#include <llvm/IR/IRBuilder.h>
-#include <llvm/IR/Value.h>
 #include <llvm/IR/Type.h>
-#include <llvm/IR/Function.h>
+#include <llvm/IR/Value.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/Support/raw_ostream.h>
 
@@ -43,10 +43,10 @@ using CodegenDiagnostics = std::vector<std::string>;
 /**
  * Walks the semantically analysed AST and emits LLVM IR using
  * the LLVM C++ API. The resulting IR can be compiled to machine
- * code via LLVM's JIT or ahead-of-time compiler. 
+ * code via LLVM's JIT or ahead-of-time compiler.
  */
 class CodeGenerator {
-public:
+  public:
     CodeGenerator();
     ~CodeGenerator() = default;
 
@@ -74,7 +74,7 @@ public:
     void visit(FuncCall &node);
     void visit(NewExpr &node);
 
-private:
+  private:
     std::unique_ptr<llvm::LLVMContext> context;
     std::unique_ptr<llvm::Module> module;
     std::unique_ptr<llvm::IRBuilder<>> builder;

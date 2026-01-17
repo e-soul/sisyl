@@ -19,9 +19,9 @@
 #include "parser_driver.h"
 #include "ast_builder.h"
 
-#include "antlr4-runtime.h"
 #include "SiSyLLexer.h"
 #include "SiSyLParser.h"
+#include "antlr4-runtime.h"
 
 #include <any>
 #include <filesystem>
@@ -34,14 +34,10 @@ using namespace sisyl;
  * Custom error listener that collects parse errors into a vector.
  */
 class ErrorCollector : public antlr4::BaseErrorListener {
-public:
+  public:
     std::vector<std::string> errors;
 
-    void syntaxError(antlr4::Recognizer * /*recognizer*/,
-                     antlr4::Token * /*offendingSymbol*/,
-                     size_t line,
-                     size_t charPositionInLine,
-                     const std::string &msg,
+    void syntaxError(antlr4::Recognizer * /*recognizer*/, antlr4::Token * /*offendingSymbol*/, size_t line, size_t charPositionInLine, const std::string &msg,
                      std::exception_ptr /*e*/) override {
         std::ostringstream oss;
         oss << "line " << line << ":" << charPositionInLine << " " << msg;

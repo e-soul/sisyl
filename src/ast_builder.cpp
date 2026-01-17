@@ -49,8 +49,7 @@ std::any AstBuilder::visitProgram(SiSyLParser::ProgramContext *ctx) {
 
 std::any AstBuilder::visitClassDecl(SiSyLParser::ClassDeclContext *ctx) {
     std::string name = ctx->IDENT()->getText();
-    auto fields = std::any_cast<std::vector<std::pair<Type, std::string>>>(
-        visit(ctx->classFields()));
+    auto fields = std::any_cast<std::vector<std::pair<Type, std::string>>>(visit(ctx->classFields()));
     return std::make_shared<ClassDecl>(name, fields);
 }
 
@@ -59,27 +58,27 @@ std::any AstBuilder::visitClassFields(SiSyLParser::ClassFieldsContext *ctx) {
 
     auto types = ctx->type();
     auto idents = ctx->IDENT();
-    
+
     for (size_t i = 0; i < types.size(); ++i) {
         Type typeName = std::any_cast<Type>(visit(types[i]));
         std::string fieldName = idents[i]->getText();
         fields.emplace_back(std::move(typeName), std::move(fieldName));
     }
-    
+
     return fields;
 }
 
 std::any AstBuilder::visitFuncDecl(SiSyLParser::FuncDeclContext *ctx) {
     Type returnType = std::any_cast<Type>(visit(ctx->type()));
     std::string name = ctx->IDENT()->getText();
-    
+
     std::vector<Parameter> params;
     if (ctx->paramList()) {
         params = std::any_cast<std::vector<Parameter>>(visit(ctx->paramList()));
     }
-    
+
     auto body = std::any_cast<std::shared_ptr<BlockStmt>>(visit(ctx->block()));
-    
+
     return std::make_shared<FuncDecl>(std::move(returnType), name, params, body);
 }
 
@@ -134,45 +133,41 @@ std::any AstBuilder::visitBlockStmt(SiSyLParser::BlockStmtContext *ctx) {
 std::any AstBuilder::visitVarDecl(SiSyLParser::VarDeclContext *ctx) {
     Type typeName = std::any_cast<Type>(visit(ctx->type()));
     std::string name = ctx->IDENT()->getText();
-    
+
     std::shared_ptr<Expression> initExpr;
     if (ctx->expression()) {
         initExpr = std::any_cast<std::shared_ptr<Expression>>(visit(ctx->expression()));
     }
-    
-    return std::static_pointer_cast<Statement>(
-        std::make_shared<VarDeclStmt>(std::move(typeName), name, initExpr));
+
+    return std::static_pointer_cast<Statement>(std::make_shared<VarDeclStmt>(std::move(typeName), name, initExpr));
 }
 
 std::any AstBuilder::visitAssignStmt(SiSyLParser::AssignStmtContext *ctx) {
     auto location = std::any_cast<std::shared_ptr<Expression>>(visit(ctx->location()));
     auto expr = std::any_cast<std::shared_ptr<Expression>>(visit(ctx->expression()));
-    
-    return std::static_pointer_cast<Statement>(
-        std::make_shared<AssignStmt>(location, expr));
+
+    return std::static_pointer_cast<Statement>(std::make_shared<AssignStmt>(location, expr));
 }
 
 std::any AstBuilder::visitIfStmt(SiSyLParser::IfStmtContext *ctx) {
     auto condition = std::any_cast<std::shared_ptr<Expression>>(visit(ctx->expression()));
-    
+
     auto blocks = ctx->block();
     auto thenBranch = std::any_cast<std::shared_ptr<BlockStmt>>(visit(blocks[0]));
-    
+
     std::shared_ptr<BlockStmt> elseBranch;
     if (blocks.size() > 1) {
         elseBranch = std::any_cast<std::shared_ptr<BlockStmt>>(visit(blocks[1]));
     }
-    
-    return std::static_pointer_cast<Statement>(
-        std::make_shared<IfStmt>(condition, thenBranch, elseBranch));
+
+    return std::static_pointer_cast<Statement>(std::make_shared<IfStmt>(condition, thenBranch, elseBranch));
 }
 
 std::any AstBuilder::visitWhileStmt(SiSyLParser::WhileStmtContext *ctx) {
     auto condition = std::any_cast<std::shared_ptr<Expression>>(visit(ctx->expression()));
     auto body = std::any_cast<std::shared_ptr<BlockStmt>>(visit(ctx->block()));
-    
-    return std::static_pointer_cast<Statement>(
-        std::make_shared<WhileStmt>(condition, body));
+
+    return std::static_pointer_cast<Statement>(std::make_shared<WhileStmt>(condition, body));
 }
 
 std::any AstBuilder::visitReturnStmt(SiSyLParser::ReturnStmtContext *ctx) {
@@ -180,43 +175,39 @@ std::any AstBuilder::visitReturnStmt(SiSyLParser::ReturnStmtContext *ctx) {
     if (ctx->expression()) {
         expr = std::any_cast<std::shared_ptr<Expression>>(visit(ctx->expression()));
     }
-    
-    return std::static_pointer_cast<Statement>(
-        std::make_shared<ReturnStmt>(expr));
+
+    return std::static_pointer_cast<Statement>(std::make_shared<ReturnStmt>(expr));
 }
 
 std::any AstBuilder::visitExprStmt(SiSyLParser::ExprStmtContext *ctx) {
     auto expr = std::any_cast<std::shared_ptr<Expression>>(visit(ctx->expression()));
-    
-    return std::static_pointer_cast<Statement>(
-        std::make_shared<ExprStmt>(expr));
+
+    return std::static_pointer_cast<Statement>(std::make_shared<ExprStmt>(expr));
 }
 
-std::any AstBuilder::visitExpression(SiSyLParser::ExpressionContext *ctx) {
-    return visit(ctx->logicalOrExpr());
-}
+std::any AstBuilder::visitExpression(SiSyLParser::ExpressionContext *ctx) { return visit(ctx->logicalOrExpr()); }
 
 std::any AstBuilder::visitLogicalOrExpr(SiSyLParser::LogicalOrExprContext *ctx) {
     auto operands = ctx->logicalAndExpr();
     auto result = std::any_cast<std::shared_ptr<Expression>>(visit(operands[0]));
-    
+
     for (size_t i = 1; i < operands.size(); ++i) {
         auto right = std::any_cast<std::shared_ptr<Expression>>(visit(operands[i]));
         result = std::make_shared<BinaryOp>(result, "||", right);
     }
-    
+
     return result;
 }
 
 std::any AstBuilder::visitLogicalAndExpr(SiSyLParser::LogicalAndExprContext *ctx) {
     auto operands = ctx->equalityExpr();
     auto result = std::any_cast<std::shared_ptr<Expression>>(visit(operands[0]));
-    
+
     for (size_t i = 1; i < operands.size(); ++i) {
         auto right = std::any_cast<std::shared_ptr<Expression>>(visit(operands[i]));
         result = std::make_shared<BinaryOp>(result, "&&", right);
     }
-    
+
     return result;
 }
 
@@ -231,7 +222,7 @@ std::any AstBuilder::visitEqualityExpr(SiSyLParser::EqualityExprContext *ctx) {
         auto right = std::any_cast<std::shared_ptr<Expression>>(visit(operands[i]));
         result = std::make_shared<BinaryOp>(result, op, right);
     }
-    
+
     return result;
 }
 
@@ -246,7 +237,7 @@ std::any AstBuilder::visitRelationalExpr(SiSyLParser::RelationalExprContext *ctx
         auto right = std::any_cast<std::shared_ptr<Expression>>(visit(operands[i]));
         result = std::make_shared<BinaryOp>(result, op, right);
     }
-    
+
     return result;
 }
 
@@ -261,7 +252,7 @@ std::any AstBuilder::visitAddExpr(SiSyLParser::AddExprContext *ctx) {
         auto right = std::any_cast<std::shared_ptr<Expression>>(visit(operands[i]));
         result = std::make_shared<BinaryOp>(result, op, right);
     }
-    
+
     return result;
 }
 
@@ -276,7 +267,7 @@ std::any AstBuilder::visitMulExpr(SiSyLParser::MulExprContext *ctx) {
         auto right = std::any_cast<std::shared_ptr<Expression>>(visit(operands[i]));
         result = std::make_shared<BinaryOp>(result, op, right);
     }
-    
+
     return result;
 }
 
@@ -291,35 +282,30 @@ std::any AstBuilder::visitUnaryExpr(SiSyLParser::UnaryExprContext *ctx) {
     } else {
         op = "-";
     }
-    
+
     auto operand = std::any_cast<std::shared_ptr<Expression>>(visit(ctx->unaryExpr()));
-    return std::static_pointer_cast<Expression>(
-        std::make_shared<UnaryOp>(op, operand));
+    return std::static_pointer_cast<Expression>(std::make_shared<UnaryOp>(op, operand));
 }
 
 std::any AstBuilder::visitPrimary(SiSyLParser::PrimaryContext *ctx) {
     if (ctx->INT_LIT()) {
         std::int64_t value = std::stoll(ctx->INT_LIT()->getText());
-        return std::static_pointer_cast<Expression>(
-            std::make_shared<IntLiteral>(value));
+        return std::static_pointer_cast<Expression>(std::make_shared<IntLiteral>(value));
     }
 
     if (ctx->BOOL_LIT()) {
         bool value = (ctx->BOOL_LIT()->getText() == "true");
-        return std::static_pointer_cast<Expression>(
-            std::make_shared<BoolLiteral>(value));
+        return std::static_pointer_cast<Expression>(std::make_shared<BoolLiteral>(value));
     }
 
     if (ctx->STRING_LIT()) {
         std::string value = unquoteString(ctx->STRING_LIT()->getText());
-        return std::static_pointer_cast<Expression>(
-            std::make_shared<StringLiteral>(value));
+        return std::static_pointer_cast<Expression>(std::make_shared<StringLiteral>(value));
     }
 
     if (ctx->NEW()) {
         std::string typeName = ctx->IDENT()->getText();
-        return std::static_pointer_cast<Expression>(
-            std::make_shared<NewExpr>(typeName));
+        return std::static_pointer_cast<Expression>(std::make_shared<NewExpr>(typeName));
     }
 
     if (ctx->expression()) {
@@ -330,21 +316,17 @@ std::any AstBuilder::visitPrimary(SiSyLParser::PrimaryContext *ctx) {
         return visit(ctx->location());
     }
 
-    if (ctx->argList() || 
-        (ctx->IDENT() && ctx->children.size() > 1 && 
-         ctx->children[1]->getText() == "(")) {
+    if (ctx->argList() || (ctx->IDENT() && ctx->children.size() > 1 && ctx->children[1]->getText() == "(")) {
         std::string callee = ctx->IDENT()->getText();
         std::vector<std::shared_ptr<Expression>> args;
-        
+
         if (ctx->argList()) {
-            args = std::any_cast<std::vector<std::shared_ptr<Expression>>>(
-                visit(ctx->argList()));
+            args = std::any_cast<std::vector<std::shared_ptr<Expression>>>(visit(ctx->argList()));
         }
-        
-        return std::static_pointer_cast<Expression>(
-            std::make_shared<FuncCall>(callee, args));
+
+        return std::static_pointer_cast<Expression>(std::make_shared<FuncCall>(callee, args));
     }
-    
+
     throw std::runtime_error("Unknown primary expression type");
 }
 
@@ -358,20 +340,17 @@ std::any AstBuilder::visitArgList(SiSyLParser::ArgListContext *ctx) {
 
 std::any AstBuilder::visitLocation(SiSyLParser::LocationContext *ctx) {
     auto idents = ctx->IDENT();
-    
+
     if (idents.size() == 1) {
         return std::static_pointer_cast<Expression>(std::make_shared<VarRef>(idents[0]->getText()));
     }
-    
+
     // Field access path (a.b.c)
     std::vector<std::string> path;
     for (auto *ident : idents) {
         path.push_back(ident->getText());
     }
-    return std::static_pointer_cast<Expression>(
-        std::make_shared<FieldAccess>(path));
+    return std::static_pointer_cast<Expression>(std::make_shared<FieldAccess>(path));
 }
 
-std::any AstBuilder::visitType(SiSyLParser::TypeContext *ctx) {
-    return parseType(ctx->getText());
-}
+std::any AstBuilder::visitType(SiSyLParser::TypeContext *ctx) { return parseType(ctx->getText()); }
