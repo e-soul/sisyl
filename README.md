@@ -18,13 +18,30 @@ The language syntax is defined using ANTLR4. SiSyL supports:
 - Expressions with arithmetic, logical and relational operators.
 - Function calls and object allocation with `new`.
 
+#### Example Program
+
+```
+Int64 cap(Int64 a, Int64 b) {
+    if (b < 5) {
+        return a + b;
+    }
+    return a + 5;
+}
+
+Int64 main() {
+    Int64 x = 5;
+    Int64 y = 10;
+    return cap(x, y);
+}
+```
+
 ### Compiler Architecture
 
 SiSyL's compiler follows a traditional pipeline:
 
 1. **Parsing (front‑end)** – Source text is parsed with ANTLR4 into a parse tree and then converted into an AST.
 
-2. **Semantic analysis (middle‑end)** – The compiler checks meaning, names, types, enforces the single‑ownership "move" model.
+2. **Semantic analysis (middle‑end)** – The compiler checks meaning, names, types, and enforces the single‑ownership "move" model.
 
 3. **Code generation (back‑end)** – The compiler lowers the validated AST into LLVM IR.
 
@@ -62,7 +79,7 @@ The `sisylc` compiler currently emits LLVM IR (text). To produce a native execut
 
 ```sh
 # 1) Emit LLVM IR
-build/Release/sisylc.exe --emit-ir -o program.ll program.sisyl 
+build\sisylc.exe --emit-ir -o program.ll program.sisyl 
 
 # 2a) Compile LLVM IR to a native executable with statically linked MSVC CRT
 clang program.ll -O2 -o program.exe
@@ -72,5 +89,5 @@ clang-cl /MD /O2 /Fe:program.exe program.ll /link msvcrt.lib
 clang-cl /O2 /Fe:program.exe program.ll /link libcmt.lib
 
 # 3) Run
-./program.exe
+program.exe
 ```

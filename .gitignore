@@ -1,3 +1,7 @@
+*.exe
+*.ll
+*.sisyl
 build
 build-*
+c.bat
 CMakeUserPresets.json
